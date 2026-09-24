@@ -2,7 +2,7 @@ import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
 
 const TEMPLATE_URL='assets/card/final-template.pdf';
-const TEMPLATE_VERSION='wedding-card-v19-main-preset-custom-share-lightweight';
+const TEMPLATE_VERSION='wedding-card-v20-share-choices-lightweight';
 // MAIN PRESET — stored in the source code, not browser storage.
 // Change these values if you want a different default on every Vercel deployment/device.
 const MAIN_PRESET={
@@ -204,26 +204,30 @@ function openSocialShare(rec,shareUrl){
   $('#modalContent').innerHTML=`
     <div class="share-modal-head">
       <div class="share-badge">✦</div>
-      <div><h2>Share wedding invitation</h2><p class="share-intro">The link below is guest-only. It opens the invitation page directly and never exposes the personalizer. On phones, <strong>Share PDF</strong> uses the device share sheet when the browser supports PDF files.</p></div>
+      <div><h2>Share wedding invitation</h2><p class="share-intro">Choose <strong>Share PDF</strong> for the actual PDF file, or <strong>Share Link</strong> for the lightweight guest invitation webpage. The guest link never exposes the personalizer.</p></div>
     </div>
-    <div class="share-link-box"><div><strong>Guest invitation link</strong><small>Opens the polished invitation viewer only.</small></div><button class="mini-btn copy-now" id="copyShareLink">Copy link</button></div>
-    <div class="share-grid">
-      <button class="share-tile whatsapp" data-share-url="https://wa.me/?text=${encText}%20${encUrl}"><span>WhatsApp</span><small>Send guest link</small></button>
-      <button class="share-tile telegram" data-share-url="https://t.me/share/url?url=${encUrl}&text=${encText}"><span>Telegram</span><small>Send guest link</small></button>
-      <button class="share-tile facebook" data-share-url="https://www.facebook.com/sharer/sharer.php?u=${encUrl}"><span>Facebook</span><small>Share guest link</small></button>
-      <button class="share-tile xshare" data-share-url="https://twitter.com/intent/tweet?text=${encText}&url=${encUrl}"><span>X</span><small>Share guest link</small></button>
-      <button class="share-tile email" data-share-url="mailto:?subject=${encodeURIComponent('Wedding Invitation')}&body=${encodeURIComponent(text+'\n\n'+shareUrl)}"><span>Email</span><small>Send guest link</small></button>
-      <button class="share-tile native" id="shareNativeAgain"><span>Share PDF to phone apps</span><small>Open the phone sharing sheet for the actual PDF</small></button>
+    <div class="share-choice-grid">
+      <button class="share-choice pdf-choice" id="sharePdfChoice"><span class="share-choice-icon">▣</span><strong>Share PDF</strong><small>Send the actual PDF through your device's share sheet.</small></button>
+      <button class="share-choice link-choice" id="shareLinkChoice"><span class="share-choice-icon">↗</span><strong>Share Link</strong><small>Send a fast guest-only invitation webpage.</small></button>
+    </div>
+    <div id="linkShareArea" class="link-share-area hidden">
+      <div class="share-link-box"><div><strong>Guest invitation link</strong><small>Opens the polished invitation viewer only.</small></div><button class="mini-btn copy-now" id="copyShareLink">Copy link</button></div>
+      <div class="share-grid">
+        <button class="share-tile whatsapp" data-share-url="https://wa.me/?text=${encText}%20${encUrl}"><span>WhatsApp</span><small>Send guest link</small></button>
+        <button class="share-tile telegram" data-share-url="https://t.me/share/url?url=${encUrl}&text=${encText}"><span>Telegram</span><small>Send guest link</small></button>
+        <button class="share-tile facebook" data-share-url="https://www.facebook.com/sharer/sharer.php?u=${encUrl}"><span>Facebook</span><small>Share guest link</small></button>
+        <button class="share-tile xshare" data-share-url="https://twitter.com/intent/tweet?text=${encText}&url=${encUrl}"><span>X</span><small>Share guest link</small></button>
+        <button class="share-tile email" data-share-url="mailto:?subject=${encodeURIComponent('Wedding Invitation')}&body=${encodeURIComponent(text+'\n\n'+shareUrl)}"><span>Email</span><small>Send guest link</small></button>
+      </div>
     </div>
     <div class="share-footer"><button class="btn primary" id="openGuestView">Open guest view</button><button class="btn secondary" id="shareDownloadFallback">Download PDF</button></div>`;
   $('#modal').classList.remove('hidden');
+  $('#sharePdfChoice').onclick=async()=>{const ok=await sharePdfOrLink(rec,shareUrl,false);if(!ok)toast('PDF sharing is unavailable here. Use Share Link or Download PDF.')};
+  $('#shareLinkChoice').onclick=()=>{$('#linkShareArea').classList.remove('hidden');copyText(shareUrl).then(ok=>{if(ok)toast('Guest invitation link copied')}).catch(()=>{})};
   $('#modalContent').querySelectorAll('[data-share-url]').forEach(btn=>btn.onclick=()=>{window.open(btn.dataset.shareUrl,'_blank','noopener,noreferrer');toast('Share window opened')});
   $('#copyShareLink').onclick=async()=>{const ok=await copyText(shareUrl);toast(ok?'Guest invitation link copied':'Copy the link from the prompt')};
   $('#shareDownloadFallback').onclick=()=>downloadRecord(rec);
   $('#openGuestView').onclick=()=>{window.location.href=shareUrl};
-  $('#shareNativeAgain').onclick=()=>sharePdfOrLink(rec,shareUrl,true);
-  // Try once immediately, but never replace the guest link with an editor link.
-  copyText(shareUrl).then(ok=>{if(ok)toast('Guest invitation link copied')}).catch(()=>{});
 }
 async function copyText(text){
   try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true}}catch{}
@@ -353,14 +357,15 @@ function openInviteSharePanel(name,shareUrl,blob,fileName,rec){
   const text=`Wedding invitation for ${name}`;
   const encText=encodeURIComponent(text),encUrl=encodeURIComponent(shareUrl);
   const modal=document.createElement('div');modal.className='invite-share-fallback';
-  modal.innerHTML=`<div class="invite-share-card studio-share-card"><button class="invite-share-close">×</button><div class="share-modal-head"><div class="share-badge">✦</div><div><h2>Share wedding invitation</h2><p class="share-intro">Choose how you want to send this guest-only invitation. The recipient will see the invitation viewer, not the personalizer.</p></div></div><div class="share-link-box"><div><strong>Guest invitation link</strong><small>Opens the invitation viewer directly.</small></div><button class="mini-btn copy-now" id="guestCopyLink">Copy link</button></div><div class="share-grid"><button class="share-tile whatsapp" data-url="https://wa.me/?text=${encText}%20${encUrl}"><span>WhatsApp</span><small>Send guest link</small></button><button class="share-tile telegram" data-url="https://t.me/share/url?url=${encUrl}&text=${encText}"><span>Telegram</span><small>Send guest link</small></button><button class="share-tile facebook" data-url="https://www.facebook.com/sharer/sharer.php?u=${encUrl}"><span>Facebook</span><small>Share guest link</small></button><button class="share-tile xshare" data-url="https://twitter.com/intent/tweet?text=${encText}&url=${encUrl}"><span>X</span><small>Share guest link</small></button><button class="share-tile email" data-url="mailto:?subject=${encodeURIComponent('Wedding Invitation')}&body=${encodeURIComponent(text+'\n\n'+shareUrl)}"><span>Email</span><small>Send guest link</small></button><button class="share-tile native" id="guestNativeShare"><span>Share PDF to phone apps</span><small>Open the phone share sheet</small></button></div><div class="share-footer"><button class="btn primary" id="guestOpenView">Open guest view</button><button class="btn secondary" id="guestDownload">Download PDF</button></div></div>`;
+  modal.innerHTML=`<div class="invite-share-card studio-share-card"><button class="invite-share-close">×</button><div class="share-modal-head"><div class="share-badge">✦</div><div><h2>Share wedding invitation</h2><p class="share-intro">Choose <strong>Share PDF</strong> for the actual file, or <strong>Share Link</strong> for the fast guest webpage.</p></div></div><div class="share-choice-grid"><button class="share-choice pdf-choice" id="guestPdfChoice"><span class="share-choice-icon">▣</span><strong>Share PDF</strong><small>Send the actual PDF through your device's share sheet.</small></button><button class="share-choice link-choice" id="guestLinkChoice"><span class="share-choice-icon">↗</span><strong>Share Link</strong><small>Send a lightweight guest-only invitation page.</small></button></div><div id="guestLinkArea" class="link-share-area hidden"><div class="share-link-box"><div><strong>Guest invitation link</strong><small>Opens the invitation viewer directly.</small></div><button class="mini-btn copy-now" id="guestCopyLink">Copy link</button></div><div class="share-grid"><button class="share-tile whatsapp" data-url="https://wa.me/?text=${encText}%20${encUrl}"><span>WhatsApp</span><small>Send guest link</small></button><button class="share-tile telegram" data-url="https://t.me/share/url?url=${encUrl}&text=${encText}"><span>Telegram</span><small>Send guest link</small></button><button class="share-tile facebook" data-url="https://www.facebook.com/sharer/sharer.php?u=${encUrl}"><span>Facebook</span><small>Share guest link</small></button><button class="share-tile xshare" data-url="https://twitter.com/intent/tweet?text=${encText}&url=${encUrl}"><span>X</span><small>Share guest link</small></button><button class="share-tile email" data-url="mailto:?subject=${encodeURIComponent('Wedding Invitation')}&body=${encodeURIComponent(text+'\n\n'+shareUrl)}"><span>Email</span><small>Send guest link</small></button></div></div><div class="share-footer"><button class="btn primary" id="guestOpenView">Open guest view</button><button class="btn secondary" id="guestDownload">Download PDF</button></div></div>`;
   document.body.appendChild(modal);
   modal.querySelector('.invite-share-close').onclick=()=>modal.remove();
-  modal.querySelectorAll('[data-url]').forEach(b=>b.onclick=()=>window.open(b.dataset.url,'_blank','noopener,noreferrer'));
+  modal.querySelector('#guestPdfChoice').onclick=async()=>{const ok=await sharePdfOrLink(rec,shareUrl,false);if(!ok)toast('PDF sharing is unavailable here. Use Share Link or Download PDF.')};
+  modal.querySelector('#guestLinkChoice').onclick=()=>{modal.querySelector('#guestLinkArea').classList.remove('hidden');copyText(shareUrl).then(ok=>{if(ok)toast('Invitation link copied')}).catch(()=>{})};
+  modal.querySelectorAll('[data-url]').forEach(btn=>btn.onclick=()=>{window.open(btn.dataset.url,'_blank','noopener,noreferrer');toast('Share window opened')});
   modal.querySelector('#guestCopyLink').onclick=async()=>toast(await copyText(shareUrl)?'Invitation link copied':'Copy the link from the prompt');
   modal.querySelector('#guestOpenView').onclick=()=>{modal.remove();window.location.href=shareUrl};
   modal.querySelector('#guestDownload').onclick=()=>downloadBlob(blob,fileName);
-  modal.querySelector('#guestNativeShare').onclick=async()=>{await sharePdfOrLink(rec,shareUrl,true)};
 }
 
 function openInviteShareFallback(name,shareUrl,blob,fileName){
