@@ -1,16 +1,12 @@
-# Vercel deployment
+Vercel deployment
 
-Upload the contents of this folder as the Vercel project root.
+1. Extract this ZIP.
+2. Upload the CONTENTS of the extracted folder, not the parent ZIP folder.
+3. The Vercel root must directly contain index.html, guest.html, vercel.json, js/, css/, and assets/.
+4. Framework Preset: Other.
+5. Build Command: empty.
+6. Output Directory: empty.
+7. Install Command: empty.
+8. Redeploy with the new files.
 
-- Framework preset: Other
-- Root Directory: ./
-- Build Command: empty
-- Output Directory: empty
-- Install Command: empty
-
-This version generates compact `/i/<token>` guest links directly in the browser using gzip compression. There is no external shortener and no redirect wait. Vercel rewrites `/i/*` directly to the guest viewer.
-
-Main Preset is hard-coded in `js/app.js` and is not browser-saved:
-- Name X 193, Y 59, Size 20, Width 420
-- Address X 244, Y 34, Size 18, Width 365
-- Noto Sans Devanagari, Bold, Left, #7c1f31
+Verification: the footer should say Template: wedding-card-v29-share-fixed. The old live site was serving v13, which is why its share behavior and old preset were still visible.
