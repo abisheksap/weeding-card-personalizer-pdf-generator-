@@ -1,6 +1,6 @@
 import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs';
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
-const TEMPLATE_URL='assets/card/final-template.pdf';
+const TEMPLATE_URL='/assets/card/final-template.pdf';
 const FONT_URL='assets/fonts/NotoSansDevanagari-Bold.ttf';
 const DEFAULT_LAYOUT={name:{page:0,x:193,y:59,maxWidth:420,fontSize:20,fontFamily:'NotoDeva',fontWeight:700,color:'#7c1f31',align:'left'},address:{page:0,x:244,y:34,maxWidth:365,fontSize:18,fontFamily:'NotoDeva',fontWeight:700,color:'#7c1f31',align:'left'}};
 const qs=s=>document.querySelector(s);
