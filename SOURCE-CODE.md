@@ -1,10 +1,9 @@
-# Wedding Invitation Studio v24 source
+# Source map
 
-Key files:
-- `index.html` — personalizer UI and collapsible Customize controls.
-- `js/app.js` — Main Preset, PDF generation, font mapping, sharing, Messenger fallback.
-- `guest.html` / `js/guest.js` — guest-only viewer and sharing.
-- `css/styles.css` — personalizer styling and font/share styles.
-- `vercel.json` — Vercel routing.
-
-Main Preset remains hard-coded in `js/app.js`.
+- `index.html` — personalizer UI
+- `guest.html` — isolated guest viewer route
+- `js/app.js` — personalizer, Main Preset, PDF generation, sharing and short-link client
+- `js/guest.js` — guest viewer and sharing
+- `api/shorten.js` — Vercel serverless endpoint that creates a compact TinyURL
+- `vercel.json` — `/invite` rewrite and cache headers
+- `assets/card/final-template.pdf` — invitation template

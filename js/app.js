@@ -2,7 +2,7 @@ import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
 
 const TEMPLATE_URL='assets/card/final-template.pdf';
-const TEMPLATE_VERSION='wedding-card-v24-custom-fonts-messenger';
+const TEMPLATE_VERSION='wedding-card-v25-short-links';
 // MAIN PRESET — stored in the source code, not browser storage.
 // Change these values if you want a different default on every Vercel deployment/device.
 const MAIN_PRESET={
@@ -12,8 +12,8 @@ const MAIN_PRESET={
     id:'main-preset',
     name:'Main Preset',
     layout:{
-      name:{page:0,x:196,y:56,maxWidth:420,fontSize:24,fontFamily:'NotoDeva',fontWeight:700,color:'#7c1f31',align:'left'},
-      address:{page:0,x:246,y:32,maxWidth:365,fontSize:22,fontFamily:'NotoDeva',fontWeight:700,color:'#7c1f31',align:'left'}
+      name:{page:0,x:193,y:59,maxWidth:420,fontSize:20,fontFamily:'NotoDeva',fontWeight:700,color:'#7c1f31',align:'left'},
+      address:{page:0,x:244,y:34,maxWidth:365,fontSize:18,fontFamily:'NotoDeva',fontWeight:700,color:'#7c1f31',align:'left'}
     }
   }
 };
@@ -97,7 +97,7 @@ function decodeShareState(value){
   const binary=atob(padded),bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
   return JSON.parse(new TextDecoder().decode(bytes));
 }
-function buildShareUrl(){
+function buildLongShareUrl(){
   const url=new URL('/invite',window.location.origin);
   url.searchParams.set('invite','1');
   url.searchParams.set('card',encodeShareState({
@@ -106,6 +106,17 @@ function buildShareUrl(){
     template:state.template
   }));
   return url.toString();
+}
+async function shortenShareUrl(longUrl){
+  try{
+    const r=await fetch('/api/shorten?url='+encodeURIComponent(longUrl),{cache:'no-store'});
+    if(!r.ok)throw new Error('shortener failed');
+    const data=await r.json();
+    return data.shortUrl||longUrl;
+  }catch(e){
+    console.warn('Short link unavailable; using full guest URL',e);
+    return longUrl;
+  }
 }
 function loadSharedPreset(){
   try{
@@ -296,12 +307,11 @@ async function sharePdfOrLink(rec,shareUrl,showFallback=false){
 }
 async function shareRecord(rec){
   if(!rec?.pdfBlob)return;
-  const shareUrl=buildShareUrl();
-  rec.sharedAt=new Date().toISOString();rec.shareUrl=shareUrl;
+  const longUrl=buildLongShareUrl();
+  toast('Preparing short invitation link…');
+  const shareUrl=await shortenShareUrl(longUrl);
+  rec.sharedAt=new Date().toISOString();rec.shareUrl=shareUrl;rec.longShareUrl=longUrl;
   await put(rec);state.records=await getAll();
-  // Always show our Wedding Invitation Studio share panel first.
-  // The native phone share sheet is available as an explicit option inside it,
-  // so the user can always see Copy Link + social options before sharing.
   openSocialShare(rec,shareUrl);
 }
 $('#downloadBtn').onclick=async()=>{const rec=await ensureGenerated();if(rec){downloadRecord(rec);toast('PDF downloaded and saved in Generated Cards')}};
