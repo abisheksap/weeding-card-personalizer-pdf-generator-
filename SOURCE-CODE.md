@@ -1,15 +1,10 @@
-# Source Code — Wedding Invitation Studio v21
+# Wedding Invitation Studio v24 source
 
-The complete application source is included in this project folder.
+Key files:
+- `index.html` — personalizer UI and collapsible Customize controls.
+- `js/app.js` — Main Preset, PDF generation, font mapping, sharing, Messenger fallback.
+- `guest.html` / `js/guest.js` — guest-only viewer and sharing.
+- `css/styles.css` — personalizer styling and font/share styles.
+- `vercel.json` — Vercel routing.
 
-- `index.html` — personalizer/editor UI
-- `js/app.js` — personalizer, PDF generation, presets, sharing
-- `guest.html` — isolated guest-only route shell
-- `js/guest.js` — guest-only invitation renderer and sharing
-- `css/styles.css` — site and guest-view styling
-- `vercel.json` — `/invite` → `/guest.html` rewrite
-- `service-worker.js` — cache/version handling
-- `assets/card/final-template.pdf` — 3-page invitation template
-- `assets/fonts/` — Devanagari fonts
-
-Main Preset is source-controlled in `js/app.js`.
+Main Preset remains hard-coded in `js/app.js`.

@@ -31,7 +31,9 @@
         <label for="guestAddress">Address</label>
         <textarea id="guestAddress" rows="4" spellcheck="false" placeholder="भरतपुर–१०, चितवन / Bharatpur-10, Chitwan"></textarea>
 
-        <div class="editor-panel">
+        <details class="editor-panel" open>
+          <summary class="editor-summary"><span><strong>Customize</strong><small>Adjust name, address, fonts and placement</small></span><span class="editor-chevron">⌄</span></summary>
+          <div class="editor-inner">
           <div class="editor-head">
             <div><strong>Adjust name & address</strong><small>Drag the text on the preview or fine-tune it below.</small></div>
             <button class="mini-btn" id="resetLayout" type="button">Reset</button>
@@ -51,7 +53,7 @@
               <label>Width <input id="nameMaxWidth" type="range" min="80" max="520" step="1" value="420"><output id="nameMaxWidthValue">420</output></label>
             </div>
             <div class="font-grid">
-              <label>Font <select id="nameFont"><option value="NotoDeva">Noto Sans Devanagari</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Arial">Arial</option><option value="Trebuchet MS">Trebuchet MS</option></select></label>
+              <label>Font <select id="nameFont"><option value="NotoDeva">Noto Sans Devanagari</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Arial">Arial</option><option value="Trebuchet MS">Trebuchet MS</option><option value="Garamond">Garamond</option><option value="Palatino Linotype">Palatino Linotype</option><option value="Courier New">Courier New</option><option value="NotoDevaItalic">Noto Sans Devanagari Italic</option><option value="CursiveElegant">Elegant Cursive</option><option value="Handwritten">Handwritten</option><option value="BrushScript">Brush Script</option></select></label>
               <label>Weight <select id="nameWeight"><option value="400">Regular</option><option value="700" selected>Bold</option></select></label>
               <label>Align <select id="nameAlign"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
               <label>Color <input id="nameColor" type="color" value="#7c1f31"></label>
@@ -67,14 +69,15 @@
               <label>Width <input id="addressMaxWidth" type="range" min="80" max="520" step="1" value="365"><output id="addressMaxWidthValue">365</output></label>
             </div>
             <div class="font-grid">
-              <label>Font <select id="addressFont"><option value="NotoDeva">Noto Sans Devanagari</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Arial">Arial</option><option value="Trebuchet MS">Trebuchet MS</option></select></label>
+              <label>Font <select id="addressFont"><option value="NotoDeva">Noto Sans Devanagari</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Arial">Arial</option><option value="Trebuchet MS">Trebuchet MS</option><option value="Garamond">Garamond</option><option value="Palatino Linotype">Palatino Linotype</option><option value="Courier New">Courier New</option><option value="NotoDevaItalic">Noto Sans Devanagari Italic</option><option value="CursiveElegant">Elegant Cursive</option><option value="Handwritten">Handwritten</option><option value="BrushScript">Brush Script</option></select></label>
               <label>Weight <select id="addressWeight"><option value="400">Regular</option><option value="700" selected>Bold</option></select></label>
               <label>Align <select id="addressAlign"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
               <label>Color <input id="addressColor" type="color" value="#7c1f31"></label>
             </div>
           </div>
           <div class="drag-hint" id="dragHint">Drag the name or address directly on the card preview.</div>
-        </div>
+          </div>
+        </details>
 
         <div id="duplicateNotice" class="notice hidden"></div>
         <div id="formError" class="error hidden"></div>

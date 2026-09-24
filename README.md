@@ -9,3 +9,10 @@ This is route isolation, not authentication: because the app is a public static 
 
 ## Deploy
 Deploy the contents of this folder as the Vercel project root. No nested folder is required.
+
+
+## v24 enhancements
+- Customize editor is a collapsible dropdown.
+- Added italic, cursive/handwritten and additional font choices.
+- Added Messenger to guest-link sharing fallback.
+- Guest viewer heading now says “Welcome to the wedding of [guest name]”.

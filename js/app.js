@@ -2,7 +2,7 @@ import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
 
 const TEMPLATE_URL='assets/card/final-template.pdf';
-const TEMPLATE_VERSION='wedding-card-v23-final-share-link';
+const TEMPLATE_VERSION='wedding-card-v24-custom-fonts-messenger';
 // MAIN PRESET — stored in the source code, not browser storage.
 // Change these values if you want a different default on every Vercel deployment/device.
 const MAIN_PRESET={
@@ -141,18 +141,18 @@ function positionPreviewOverlay(viewport,pw,ph){
   o.style.display='block';o.style.width=viewport.width+'px';o.style.height=viewport.height+'px';o.style.left='50%';o.style.top='50%';o.style.transform='translate(-50%,-50%)';
   for(const key of ['name','address']){
     const cfg=state.template.layout[key],el=$('#preview'+key[0].toUpperCase()+key.slice(1));const sx=viewport.width/pw,sy=viewport.height/ph;
-    Object.assign(el.style,{left:(cfg.x*sx)+'px',bottom:(cfg.y*sy)+'px',fontSize:(cfg.fontSize*sx)+'px',maxWidth:(cfg.maxWidth*sx)+'px',fontFamily:cfg.fontFamily,fontWeight:String(cfg.fontWeight),color:cfg.color,textAlign:cfg.align});
+    Object.assign(el.style,{left:(cfg.x*sx)+'px',bottom:(cfg.y*sy)+'px',fontSize:(cfg.fontSize*sx)+'px',maxWidth:(cfg.maxWidth*sx)+'px',fontFamily:fontStack(cfg.fontFamily),fontWeight:String(cfg.fontWeight),color:cfg.color,textAlign:cfg.align});
     el.textContent=$(key==='name'?'#guestName':'#guestAddress').value.trim();el.dataset.field=key;
   }
 }
 
 async function renderTextPng(text,opts){
-  await document.fonts.load(`${opts.fontWeight} ${opts.fontSize}px ${opts.fontFamily}`);await document.fonts.ready;
-  const scale=3,pad=8;const c=document.createElement('canvas');const ctx=c.getContext('2d');ctx.font=`${opts.fontWeight} ${opts.fontSize*scale}px ${opts.fontFamily}`;ctx.textBaseline='alphabetic';
+  await document.fonts.load(`${opts.fontWeight} ${opts.fontSize}px ${fontStack(opts.fontFamily)}`);await document.fonts.ready;
+  const scale=3,pad=8;const c=document.createElement('canvas');const ctx=c.getContext('2d');ctx.font=`${opts.fontWeight} ${opts.fontSize*scale}px ${fontStack(opts.fontFamily)}`;ctx.textBaseline='alphabetic';
   const max=opts.maxWidth*scale;const words=text.split(/\s+/);let lines=[],line='';
   for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width<=max||!line)line=test;else{lines.push(line);line=word}}if(line)lines.push(line);
   const lineH=opts.fontSize*scale*1.28;const width=Math.min(max,Math.max(...lines.map(x=>ctx.measureText(x).width),1))+pad*2;const height=lineH*lines.length+pad*2;c.width=Math.ceil(width);c.height=Math.ceil(height);
-  ctx.font=`${opts.fontWeight} ${opts.fontSize*scale}px ${opts.fontFamily}`;ctx.fillStyle=opts.color;ctx.textBaseline='top';ctx.textAlign=opts.align==='center'?'center':opts.align==='right'?'right':'left';
+  ctx.font=`${opts.fontWeight} ${opts.fontSize*scale}px ${fontStack(opts.fontFamily)}`;ctx.fillStyle=opts.color;ctx.textBaseline='top';ctx.textAlign=opts.align==='center'?'center':opts.align==='right'?'right':'left';
   const tx=opts.align==='center'?c.width/2:opts.align==='right'?c.width-pad:pad;lines.forEach((l,i)=>ctx.fillText(l,tx,pad+i*lineH));
   return {bytes:dataUrlToBytes(c.toDataURL('image/png')),width:c.width/scale,height:c.height/scale};
 }
@@ -216,6 +216,7 @@ function openSocialShare(rec,shareUrl){
         <button class="share-tile whatsapp" data-share-url="https://wa.me/?text=${encText}%20${encUrl}"><span>WhatsApp</span><small>Send guest link</small></button>
         <button class="share-tile telegram" data-share-url="https://t.me/share/url?url=${encUrl}&text=${encText}"><span>Telegram</span><small>Send guest link</small></button>
         <button class="share-tile facebook" data-share-url="https://www.facebook.com/sharer/sharer.php?u=${encUrl}"><span>Facebook</span><small>Share guest link</small></button>
+      <button class="share-tile messenger" data-share-url="https://www.facebook.com/dialog/send?link=${encUrl}"><span>Messenger</span><small>Send guest link</small></button>
         <button class="share-tile xshare" data-share-url="https://twitter.com/intent/tweet?text=${encText}&url=${encUrl}"><span>X</span><small>Share guest link</small></button>
         <button class="share-tile email" data-share-url="mailto:?subject=${encodeURIComponent('Wedding Invitation')}&body=${encodeURIComponent(text+'\n\n'+shareUrl)}"><span>Email</span><small>Send guest link</small></button>
       </div>
