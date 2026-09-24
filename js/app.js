@@ -25,6 +25,24 @@ const FONT_OPTIONS=[
   ['Arial','Arial'],
   ['Trebuchet MS','Trebuchet MS']
 ];
+// Central font resolver used by preview and PDF text rendering.
+function fontStack(font){
+  const stacks={
+    NotoDeva:'Noto Sans Devanagari, sans-serif',
+    NotoDevaItalic:'Noto Sans Devanagari, sans-serif',
+    Georgia:'Georgia, serif',
+    'Times New Roman':'Times New Roman, Times, serif',
+    Arial:'Arial, Helvetica, sans-serif',
+    'Trebuchet MS':'Trebuchet MS, Arial, sans-serif',
+    Garamond:'Garamond, Georgia, serif',
+    'Palatino Linotype':'Palatino Linotype, Palatino, serif',
+    'Courier New':'Courier New, monospace',
+    CursiveElegant:'Brush Script MT, Segoe Script, cursive',
+    Handwritten:'Segoe Print, Comic Sans MS, cursive',
+    BrushScript:'Brush Script MT, Segoe Script, cursive'
+  };
+  return stacks[font] || stacks.NotoDeva;
+}
 const $=s=>document.querySelector(s);
 const state={pdf:null,page:1,records:[],generated:null,template:{id:'main-preset',name:'Main Preset',layout:structuredClone(DEFAULT_LAYOUT)}};
 let db;
