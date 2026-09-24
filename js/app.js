@@ -2,7 +2,7 @@ import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
 
 const TEMPLATE_URL='assets/card/final-template.pdf';
-const TEMPLATE_VERSION='wedding-card-v20-share-choices-lightweight';
+const TEMPLATE_VERSION='wedding-card-v23-final-share-link';
 // MAIN PRESET — stored in the source code, not browser storage.
 // Change these values if you want a different default on every Vercel deployment/device.
 const MAIN_PRESET={
@@ -222,8 +222,32 @@ function openSocialShare(rec,shareUrl){
     </div>
     <div class="share-footer"><button class="btn primary" id="openGuestView">Open guest view</button><button class="btn secondary" id="shareDownloadFallback">Download PDF</button></div>`;
   $('#modal').classList.remove('hidden');
-  $('#sharePdfChoice').onclick=async()=>{const ok=await sharePdfOrLink(rec,shareUrl,false);if(!ok)toast('PDF sharing is unavailable here. Use Share Link or Download PDF.')};
-  $('#shareLinkChoice').onclick=()=>{$('#linkShareArea').classList.remove('hidden');copyText(shareUrl).then(ok=>{if(ok)toast('Guest invitation link copied')}).catch(()=>{})};
+  const fallbackLinkPanel=()=>{$('#linkShareArea').classList.remove('hidden');$('#modal').scrollTop=0};
+  const nativeLinkShare=async()=>{
+    if(!navigator.share)return false;
+    try{
+      await navigator.share({title:`Wedding Invitation — ${rec.name}`,text:`Wedding invitation for ${rec.name}.`,url:shareUrl});
+      toast('Invitation link shared');
+      return true;
+    }catch(e){
+      if(e?.name==='AbortError'){toast('Share cancelled');return true}
+      return false;
+    }
+  };
+  $('#sharePdfChoice').onclick=async()=>{
+    closeModal();
+    const ok=await sharePdfOrLink(rec,shareUrl,false);
+    if(!ok){openSocialShare(rec,shareUrl);toast('PDF file sharing is unavailable here. Choose Share Link instead.');}
+  };
+  $('#shareLinkChoice').onclick=async()=>{
+    const ok=await nativeLinkShare();
+    if(ok){closeModal();return;}
+    // Desktop browsers commonly do not expose navigator.share. Keep our
+    // share panel open and reveal real social share actions instead of
+    // silently copying the URL.
+    fallbackLinkPanel();
+    toast('Choose an app below to share the guest link.');
+  };
   $('#modalContent').querySelectorAll('[data-share-url]').forEach(btn=>btn.onclick=()=>{window.open(btn.dataset.shareUrl,'_blank','noopener,noreferrer');toast('Share window opened')});
   $('#copyShareLink').onclick=async()=>{const ok=await copyText(shareUrl);toast(ok?'Guest invitation link copied':'Copy the link from the prompt')};
   $('#shareDownloadFallback').onclick=()=>downloadRecord(rec);
@@ -353,6 +377,18 @@ async function renderInviteOnly(){
   window.addEventListener('resize',()=>{clearTimeout(window._guestResize);window._guestResize=setTimeout(()=>location.reload(),300)});
 }
 
+async function nativeLinkShare(name,shareUrl){
+  if(!navigator.share)return false;
+  try{
+    await navigator.share({title:`Wedding Invitation — ${name}`,text:`Wedding invitation for ${name}.`,url:shareUrl});
+    toast('Invitation link shared');
+    return true;
+  }catch(e){
+    if(e?.name==='AbortError'){toast('Share cancelled');return true;}
+    return false;
+  }
+}
+
 function openInviteSharePanel(name,shareUrl,blob,fileName,rec){
   const text=`Wedding invitation for ${name}`;
   const encText=encodeURIComponent(text),encUrl=encodeURIComponent(shareUrl);
@@ -361,7 +397,12 @@ function openInviteSharePanel(name,shareUrl,blob,fileName,rec){
   document.body.appendChild(modal);
   modal.querySelector('.invite-share-close').onclick=()=>modal.remove();
   modal.querySelector('#guestPdfChoice').onclick=async()=>{const ok=await sharePdfOrLink(rec,shareUrl,false);if(!ok)toast('PDF sharing is unavailable here. Use Share Link or Download PDF.')};
-  modal.querySelector('#guestLinkChoice').onclick=()=>{modal.querySelector('#guestLinkArea').classList.remove('hidden');copyText(shareUrl).then(ok=>{if(ok)toast('Invitation link copied')}).catch(()=>{})};
+  modal.querySelector('#guestLinkChoice').onclick=async()=>{
+    const ok=await nativeLinkShare(name,shareUrl);
+    if(ok){modal.remove();return;}
+    modal.querySelector('#guestLinkArea').classList.remove('hidden');
+    toast('Choose an app below to share the guest link.');
+  };
   modal.querySelectorAll('[data-url]').forEach(btn=>btn.onclick=()=>{window.open(btn.dataset.url,'_blank','noopener,noreferrer');toast('Share window opened')});
   modal.querySelector('#guestCopyLink').onclick=async()=>toast(await copyText(shareUrl)?'Invitation link copied':'Copy the link from the prompt');
   modal.querySelector('#guestOpenView').onclick=()=>{modal.remove();window.location.href=shareUrl};
@@ -394,4 +435,4 @@ function openInviteShareFallback(name,shareUrl,blob,fileName){
   }catch(e){console.error(e);showError('The application could not initialize. Please run it from a local web server and refresh.')}
 })();
 window.addEventListener('resize',()=>{clearTimeout(window._rt);window._rt=setTimeout(()=>renderPage(),150)});
-if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}))}
+if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const regs=await navigator.serviceWorker.getRegistrations();for(const r of regs)await r.unregister();const keys=await caches.keys();for(const k of keys)await caches.delete(k)}catch{}})}

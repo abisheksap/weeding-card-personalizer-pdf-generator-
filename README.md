@@ -1,32 +1,11 @@
-# Wedding Invitation Studio — Final V18
+# Wedding Invitation Studio v21
 
-## Deployment
-Deploy the contents of this folder as the Vercel project root.
+Vercel-ready wedding invitation personalizer with a code-defined Main Preset, three-page golden-star invitation template, lightweight PDF generation, and a separate guest-only route.
 
-## Main Preset
-The permanent Main Preset is in `js/app.js` under `MAIN_PRESET`; it is not stored in browser localStorage.
+## Guest route
+Share links use `/invite?invite=1&card=...`. Vercel rewrites `/invite` to `guest.html`, which contains **no personalizer/editor code**. The guest route only accepts a card payload and renders the invitation viewer. The personalizer remains at `/`.
 
-## Sharing
-The main Share button opens the Wedding Invitation Studio share panel first. It does NOT immediately open the browser/Windows native share sheet. The panel includes:
-- Copy guest-only invitation link
-- WhatsApp
-- Telegram
-- Facebook
-- X
-- Email
-- Open guest view
-- Download PDF
-- Share PDF to phone apps (native share sheet, explicitly selected)
+This is route isolation, not authentication: because the app is a public static website, a determined visitor can still type the public personalizer URL manually. If you need the editor itself to require login/password, add authentication at the hosting layer.
 
-The guest link opens `/invite?invite=1&card=...` and shows a responsive, full-width three-page invitation viewer without the personalizer.
-
-## PDF size
-The template PDF has been optimized and the generated name/address raster scale was reduced from 6x to 4x. This keeps Devanagari text crisp while avoiding unnecessarily large PDFs.
-
-
-## v19 fixes
-- Main Preset is hard-coded in js/app.js and appears as the default template selection.
-- Main Preset settings use Name X 196, Y 56, size 24, width 420; Address X 246, Y 32, size 22, width 365; Noto Sans Devanagari Bold, left aligned, #7c1f31.
-- Main Share PDF opens the custom Wedding Invitation Studio share panel first; native device sharing is only an option inside that panel.
-- Text rendering uses a 3x high-resolution canvas to keep Devanagari crisp while reducing generated PDF size.
-- Guest view remains a full-width invitation webpage rather than a small embedded PDF viewer.
+## Deploy
+Deploy the contents of this folder as the Vercel project root. No nested folder is required.

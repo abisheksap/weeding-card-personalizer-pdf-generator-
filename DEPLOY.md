@@ -1,23 +1,15 @@
-# Wedding Invitation Studio v19
+# Wedding Invitation Studio v23
 
-## Deploy to Vercel
-Upload the contents of this folder as the Vercel project root. `index.html` and `vercel.json` must be at the root.
+## Vercel deployment
 
-## Main Preset
-The Main Preset is hard-coded in `js/app.js` under `MAIN_PRESET`. It is not stored in localStorage or IndexedDB and appears as the default template in the editor.
+Upload the CONTENTS of this folder as the Vercel project root. Do not create a nested `sharefix_v23` root.
 
-Current settings:
-- Name: X 196, Y 56, Size 24, Width 420
-- Address: X 246, Y 32, Size 22, Width 365
-- Font: Noto Sans Devanagari
-- Weight: Bold
-- Align: Left
-- Color: #7c1f31
+Root should directly contain `index.html`, `guest.html`, `vercel.json`, `js/`, `css/`, and `assets/`.
 
-## Sharing
-Clicking **Share PDF** opens the site's custom share panel first. It does not immediately open the browser/Windows native share dialog. The panel includes Copy Link, WhatsApp, Telegram, Facebook, X, Email, Open Guest View, Download PDF, and an optional native device share action.
+Framework: Other
+Build command: empty
+Output directory: empty
+Install command: empty
+Root Directory: `./`
 
-The guest link uses `/invite?invite=1&card=...` and opens the full Wedding Invitation Studio guest viewer, not the personalizer and not a small embedded PDF viewer.
-
-## PDF size
-The bundled 3-page template is approximately 3.2 MB. Personalized name/address text is rendered at 3x resolution to keep Devanagari crisp while avoiding the much larger files produced by the earlier 4x/oversized build.
+The service worker is intentionally removed in v23 so old cached versions cannot override the deployed share panel.
