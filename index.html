@@ -87,7 +87,7 @@
       <div class="panel preview-panel">
         <div class="panel-head"><div><h2>Preview</h2><p>Page <span id="pageNumber">1</span> of 3</p></div><div class="preview-tools"><button class="icon-btn" id="prevPage" aria-label="Previous page">←</button><button class="icon-btn" id="nextPage" aria-label="Next page">→</button></div></div>
         <div class="preview-stage"><div id="patternOverlay" class="pattern-overlay" aria-hidden="true"></div><canvas id="previewCanvas"></canvas><div id="previewEmpty" class="preview-empty"><div class="empty-icon">💍</div><strong>Your personalized card will appear here.</strong><span>Enter a name and address to preview it.</span></div><div id="previewOverlay" class="preview-overlay" aria-hidden="true"><div id="previewName"></div><div id="previewAddress"></div></div></div>
-        <div class="preview-actions"><button class="btn secondary" id="downloadBtn" disabled>Download PDF</button><button class="btn share" id="shareBtn" disabled><span aria-hidden="true">↗</span> Share</button></div>
+        <div class="preview-actions"><button class="btn secondary" id="downloadBtn" disabled>Download PDF</button><button class="btn share" id="shareBtn" type="button"><span aria-hidden="true">↗</span> Share</button></div>
       </div>
     </div>
   </section>
@@ -106,7 +106,7 @@
       <div class="panel setting-card"><h2>Guest list</h2><p>Export names, addresses and creation dates as a CSV file.</p><button class="btn secondary" id="exportCsv">Export guest list</button></div>
       <div class="panel setting-card danger-card"><h2>Clear local data</h2><p>Removes generated invitations and PDFs from this browser. This cannot be undone.</p><button class="btn danger" id="clearData">Clear all data</button></div>
     </div>
-    <div class="about"><strong>Wedding Invitation Studio</strong><span>Local-first · No account · No server database</span><span>Template: wedding-card-v30-share-menu-fixed</span><span>The Main Preset is stored in the source code, so the same default is used on Vercel and every device.</span></div>
+    <div class="about"><strong>Wedding Invitation Studio</strong><span>Local-first · No account · No server database</span><span>Template: wedding-card-v31-share-button-fixed</span><span>The Main Preset is stored in the source code, so the same default is used on Vercel and every device.</span></div>
   </section>
 </main>
 <nav class="mobile-nav"><button class="nav-btn active" data-view="create">Create</button><button class="nav-btn" data-view="cards">Cards</button><button class="nav-btn" data-view="settings">Settings</button></nav>
@@ -115,6 +115,6 @@
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script type="module" src="js/app.js?v=29"></script>
+<script type="module" src="js/app.js?v=31"></script>
 </body>
 </html>
