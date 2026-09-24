@@ -244,11 +244,11 @@ function openSocialShare(rec,shareUrl){
     <div id="linkShareArea" class="link-share-area hidden">
       <div class="share-link-box"><div><strong>Guest invitation link</strong><small>Opens the polished invitation viewer only.</small></div><button class="mini-btn copy-now" id="copyShareLink">Copy link</button></div>
       <div class="share-grid">
-        <button class="share-tile whatsapp" data-share-url="https://wa.me/?text=${encText}%20${encUrl}"><span>WhatsApp</span><small>Send guest link</small></button>
-        <button class="share-tile telegram" data-share-url="https://t.me/share/url?url=${encUrl}&text=${encText}"><span>Telegram</span><small>Send guest link</small></button>
-        <button class="share-tile facebook" data-share-url="https://www.facebook.com/sharer/sharer.php?u=${encUrl}"><span>Facebook</span><small>Share guest link</small></button>
-      <button class="share-tile messenger" data-share-url="https://www.facebook.com/dialog/send?link=${encUrl}"><span>Messenger</span><small>Send guest link</small></button>
-        <button class="share-tile xshare" data-share-url="https://twitter.com/intent/tweet?text=${encText}&url=${encUrl}"><span>X</span><small>Share guest link</small></button>
+        <button class="share-tile whatsapp" data-template-url="https://wa.me/?text=${encText}%20__SHARE_URL__"><span>WhatsApp</span><small>Send guest link</small></button>
+        <button class="share-tile telegram" data-template-url="https://t.me/share/url?url=__SHARE_URL__&text=${encText}"><span>Telegram</span><small>Send guest link</small></button>
+        <button class="share-tile facebook" data-template-url="https://www.facebook.com/sharer/sharer.php?u=__SHARE_URL__"><span>Facebook</span><small>Share guest link</small></button>
+      <button class="share-tile messenger" data-template-url="https://www.facebook.com/dialog/send?link=__SHARE_URL__"><span>Messenger</span><small>Send guest link</small></button>
+        <button class="share-tile xshare" data-template-url="https://twitter.com/intent/tweet?text=${encText}&url=__SHARE_URL__"><span>X</span><small>Share guest link</small></button>
         <button class="share-tile email" data-share-url="mailto:?subject=${encodeURIComponent('Wedding Invitation')}&body=${encodeURIComponent(text+'\n\n'+shareUrl)}"><span>Email</span><small>Send guest link</small></button>
       </div>
     </div>
@@ -282,10 +282,10 @@ function openSocialShare(rec,shareUrl){
     fallbackLinkPanel();
     toast('Choose an app below to share the guest link.');
   };
-  $('#modalContent').querySelectorAll('[data-share-url]').forEach(btn=>btn.onclick=()=>{window.open(btn.dataset.shareUrl,'_blank','noopener,noreferrer');toast('Share window opened')});
-  $('#copyShareLink').onclick=async()=>{const ok=await copyText(shareUrl);toast(ok?'Guest invitation link copied':'Copy the link from the prompt')};
+  $('#modalContent').querySelectorAll('[data-template-url]').forEach(btn=>btn.onclick=()=>{const u=(btn.dataset.shareUrl||btn.dataset.templateUrl).replace('__SHARE_URL__',encodeURIComponent(btn.closest('#modalContent')?.querySelector('#copyShareLink')?.dataset.shareUrl||shareUrl));window.open(u,'_blank','noopener,noreferrer');toast('Share window opened')});
+  $('#copyShareLink').onclick=async()=>{const u=$('#copyShareLink').dataset.shareUrl||shareUrl;const ok=await copyText(u);toast(ok?'Guest invitation link copied':'Copy the link from the prompt')};
   $('#shareDownloadFallback').onclick=()=>downloadRecord(rec);
-  $('#openGuestView').onclick=()=>{window.location.href=shareUrl};
+  $('#openGuestView').onclick=()=>{window.location.href=$('#openGuestView').dataset.shareUrl||shareUrl};
 }
 async function copyText(text){
   try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true}}catch{}
@@ -310,21 +310,33 @@ async function sharePdfOrLink(rec,shareUrl,showFallback=false){
   return false;
 }
 async function shareRecord(rec){
+  if(!validate())return;
+  const name=$('#guestName').value.trim(), address=$('#guestAddress').value.trim();
+  const current=rec||{name,address,pdfBlob:null,filename:filename(name,address)};
+  // Open the menu immediately from the user click. Never wait for compression/PDF generation.
+  const immediateUrl=new URL('/i/'+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify({name,address}))))).replace(/%/g,''),window.location.origin).toString();
+  openSocialShare(current,immediateUrl);
   try{
-    if(!validate())return;
     const shareUrl=await buildCompactShareUrl();
-    // Do not require PDF generation just to open the Share menu.
-    // This keeps Share Link working even if the PDF engine/template is still loading.
-    const current=rec||{name:$('#guestName').value.trim(),address:$('#guestAddress').value.trim(),pdfBlob:null,filename:filename($('#guestName').value.trim(),$('#guestAddress').value.trim())};
+    const copyBtn=$('#copyShareLink');
+    if(copyBtn)copyBtn.dataset.shareUrl=shareUrl;
+    const openBtn=$('#openGuestView');
+    if(openBtn)openBtn.dataset.shareUrl=shareUrl;
+    document.querySelectorAll('#modalContent [data-share-url]').forEach(btn=>{
+      const template=btn.dataset.templateUrl;
+      if(template){btn.dataset.shareUrl=template.replace('__SHARE_URL__',encodeURIComponent(shareUrl));}
+    });
     if(rec){rec.sharedAt=new Date().toISOString();rec.shareUrl=shareUrl;rec.longShareUrl=shareUrl;await put(rec);state.records=await getAll();}
-    openSocialShare(current,shareUrl);
+    const linkBox=document.querySelector('#modalContent .share-link-box small');
+    if(linkBox)linkBox.textContent='Ready — this is the guest-only invitation link.';
   }catch(e){
-    console.error('Share menu failed',e);
-    toast('Share menu could not open. Please try again.');
+    console.error('Share link preparation failed',e);
+    toast('Share menu is ready. Use Copy Link or a sharing option.');
   }
 }
 $('#downloadBtn').onclick=async()=>{const rec=await ensureGenerated();if(rec){downloadRecord(rec);toast('PDF downloaded and saved in Generated Cards')}};
-$('#shareBtn').onclick=async()=>{try{await shareRecord(state.generated && !state.dirty ? state.generated : null)}catch(e){console.error('Share failed',e);toast('Sharing could not be opened. Please try again.')}};
+$('#shareBtn').type='button';
+$('#shareBtn').onclick=(ev)=>{ev.preventDefault();ev.stopPropagation();shareRecord(state.generated && !state.dirty ? state.generated : null)};
 
 function renderCards(){const q=normalize($('#searchInput').value||'');let arr=state.records.filter(r=>normalize(r.name).includes(q)||normalize(r.address).includes(q));const sort=$('#sortSelect').value;if(sort==='newest')arr.sort((a,b)=>b.createdAt.localeCompare(a.createdAt));if(sort==='oldest')arr.sort((a,b)=>a.createdAt.localeCompare(b.createdAt));if(sort==='name')arr.sort((a,b)=>a.name.localeCompare(b.name));$('#totalCount').textContent=state.records.length;const today=new Date().toISOString().slice(0,10);$('#todayCount').textContent=state.records.filter(r=>r.createdAt.slice(0,10)===today).length;const list=$('#cardsList');if(!arr.length){list.innerHTML=`<div class="empty-list">${q?'No matching invitations found.':'No invitations yet. Create your first personalized wedding invitation.'}</div>`;return}list.innerHTML=arr.map(r=>`<article class="inv-card"><div><div class="inv-name">${escapeHtml(r.name)}</div><div class="inv-address">${escapeHtml(r.address)}</div><div class="inv-meta">Created ${formatDate(r.createdAt)} · ${escapeHtml(r.filename)}${r.sharedAt?` · <span style="color:#347044;font-weight:800">Shared ${formatDate(r.sharedAt)}</span>`:''}</div></div><div class="inv-actions"><button class="mini-btn" data-act="open" data-id="${r.id}">Open</button><button class="mini-btn" data-act="download" data-id="${r.id}">Download</button><button class="mini-btn" data-act="share" data-id="${r.id}">Share</button><button class="mini-btn" data-act="edit" data-id="${r.id}">Edit</button><button class="mini-btn" data-act="delete" data-id="${r.id}">Delete</button></div></article>`).join('');list.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>cardAction(b.dataset.act,b.dataset.id))}
 function escapeHtml(s){return s.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
