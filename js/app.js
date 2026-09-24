@@ -2,7 +2,7 @@ import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
 
 const TEMPLATE_URL='assets/card/final-template.pdf';
-const TEMPLATE_VERSION='wedding-card-v13-clean-pages-2-3-golden-stars-invite-share';
+const TEMPLATE_VERSION='wedding-card-v19-main-preset-custom-share-lightweight';
 // MAIN PRESET — stored in the source code, not browser storage.
 // Change these values if you want a different default on every Vercel deployment/device.
 const MAIN_PRESET={
@@ -12,8 +12,8 @@ const MAIN_PRESET={
     id:'main-preset',
     name:'Main Preset',
     layout:{
-      name:{page:0,x:155,y:145,maxWidth:420,fontSize:24,fontFamily:'NotoDeva',fontWeight:700,color:'#7c1f31',align:'left'},
-      address:{page:0,x:235,y:82,maxWidth:365,fontSize:22,fontFamily:'NotoDeva',fontWeight:700,color:'#7c1f31',align:'left'}
+      name:{page:0,x:196,y:56,maxWidth:420,fontSize:24,fontFamily:'NotoDeva',fontWeight:700,color:'#7c1f31',align:'left'},
+      address:{page:0,x:246,y:32,maxWidth:365,fontSize:22,fontFamily:'NotoDeva',fontWeight:700,color:'#7c1f31',align:'left'}
     }
   }
 };
@@ -26,7 +26,7 @@ const FONT_OPTIONS=[
   ['Trebuchet MS','Trebuchet MS']
 ];
 const $=s=>document.querySelector(s);
-const state={pdf:null,page:1,records:[],generated:null,template:{id:'default',name:'Default Card Layout',layout:structuredClone(DEFAULT_LAYOUT)}};
+const state={pdf:null,page:1,records:[],generated:null,template:{id:'main-preset',name:'Main Preset',layout:structuredClone(DEFAULT_LAYOUT)}};
 let db;
 let dragState=null;
 let patternBytesPromise=null;
@@ -58,7 +58,7 @@ function filename(name,address){return `${slugPart(name)} - ${slugPart(address)}
 function uuid(){return crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)}
 function cloneLayout(layout){return structuredClone(layout||DEFAULT_LAYOUT)}
 // Main Preset is source-controlled; browser edits do not overwrite the deployment preset.
-function saveMainPreset(){}
+function saveMainPreset(){} // Intentionally no-op: Main Preset is hard-coded in this source file.
 function applyMainPreset(){
   const p=MAIN_PRESET;
   const name=$('#guestName');
@@ -80,9 +80,7 @@ function decodeShareState(value){
   return JSON.parse(new TextDecoder().decode(bytes));
 }
 function buildShareUrl(){
-  const url=new URL(window.location.href);
-  url.search='';
-  url.hash='';
+  const url=new URL('/invite',window.location.origin);
   url.searchParams.set('invite','1');
   url.searchParams.set('card',encodeShareState({
     name:$('#guestName').value.trim(),
@@ -150,7 +148,7 @@ function positionPreviewOverlay(viewport,pw,ph){
 
 async function renderTextPng(text,opts){
   await document.fonts.load(`${opts.fontWeight} ${opts.fontSize}px ${opts.fontFamily}`);await document.fonts.ready;
-  const scale=6,pad=8;const c=document.createElement('canvas');const ctx=c.getContext('2d');ctx.font=`${opts.fontWeight} ${opts.fontSize*scale}px ${opts.fontFamily}`;ctx.textBaseline='alphabetic';
+  const scale=3,pad=8;const c=document.createElement('canvas');const ctx=c.getContext('2d');ctx.font=`${opts.fontWeight} ${opts.fontSize*scale}px ${opts.fontFamily}`;ctx.textBaseline='alphabetic';
   const max=opts.maxWidth*scale;const words=text.split(/\s+/);let lines=[],line='';
   for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width<=max||!line)line=test;else{lines.push(line);line=word}}if(line)lines.push(line);
   const lineH=opts.fontSize*scale*1.28;const width=Math.min(max,Math.max(...lines.map(x=>ctx.measureText(x).width),1))+pad*2;const height=lineH*lines.length+pad*2;c.width=Math.ceil(width);c.height=Math.ceil(height);
@@ -206,25 +204,26 @@ function openSocialShare(rec,shareUrl){
   $('#modalContent').innerHTML=`
     <div class="share-modal-head">
       <div class="share-badge">✦</div>
-      <div><h2>Share wedding invitation</h2><p class="share-intro">On a phone, <strong>Share PDF</strong> opens the device share sheet for apps that accept PDF files. If direct file sharing is unavailable, the options below share the guest-only invitation link.</p></div>
+      <div><h2>Share wedding invitation</h2><p class="share-intro">The link below is guest-only. It opens the invitation page directly and never exposes the personalizer. On phones, <strong>Share PDF</strong> uses the device share sheet when the browser supports PDF files.</p></div>
     </div>
-    <div class="share-link-box"><div><strong>Guest-only invitation link</strong><small>This link opens only the invitation — not the personalizer.</small></div><button class="mini-btn copy-now" id="copyShareLink">Copy link</button></div>
+    <div class="share-link-box"><div><strong>Guest invitation link</strong><small>Opens the polished invitation viewer only.</small></div><button class="mini-btn copy-now" id="copyShareLink">Copy link</button></div>
     <div class="share-grid">
-      <button class="share-tile whatsapp" data-share-url="https://wa.me/?text=${encText}%20${encUrl}"><span>WhatsApp</span><small>Share invitation link</small></button>
-      <button class="share-tile telegram" data-share-url="https://t.me/share/url?url=${encUrl}&text=${encText}"><span>Telegram</span><small>Share invitation link</small></button>
-      <button class="share-tile facebook" data-share-url="https://www.facebook.com/sharer/sharer.php?u=${encUrl}"><span>Facebook</span><small>Share invitation link</small></button>
-      <button class="share-tile xshare" data-share-url="https://twitter.com/intent/tweet?text=${encText}&url=${encUrl}"><span>X</span><small>Share invitation link</small></button>
-      <button class="share-tile email" data-share-url="mailto:?subject=${encodeURIComponent('Wedding Invitation')}&body=${encodeURIComponent(text+'\n\n'+shareUrl)}"><span>Email</span><small>Send invitation link</small></button>
-      <button class="share-tile native" id="shareNativeAgain"><span>Phone share</span><small>Share the PDF with installed apps</small></button>
+      <button class="share-tile whatsapp" data-share-url="https://wa.me/?text=${encText}%20${encUrl}"><span>WhatsApp</span><small>Send guest link</small></button>
+      <button class="share-tile telegram" data-share-url="https://t.me/share/url?url=${encUrl}&text=${encText}"><span>Telegram</span><small>Send guest link</small></button>
+      <button class="share-tile facebook" data-share-url="https://www.facebook.com/sharer/sharer.php?u=${encUrl}"><span>Facebook</span><small>Share guest link</small></button>
+      <button class="share-tile xshare" data-share-url="https://twitter.com/intent/tweet?text=${encText}&url=${encUrl}"><span>X</span><small>Share guest link</small></button>
+      <button class="share-tile email" data-share-url="mailto:?subject=${encodeURIComponent('Wedding Invitation')}&body=${encodeURIComponent(text+'\n\n'+shareUrl)}"><span>Email</span><small>Send guest link</small></button>
+      <button class="share-tile native" id="shareNativeAgain"><span>Share PDF to phone apps</span><small>Open the phone sharing sheet for the actual PDF</small></button>
     </div>
-    <div class="share-footer"><button class="btn secondary" id="shareDownloadFallback">Download PDF</button></div>`;
+    <div class="share-footer"><button class="btn primary" id="openGuestView">Open guest view</button><button class="btn secondary" id="shareDownloadFallback">Download PDF</button></div>`;
   $('#modal').classList.remove('hidden');
   $('#modalContent').querySelectorAll('[data-share-url]').forEach(btn=>btn.onclick=()=>{window.open(btn.dataset.shareUrl,'_blank','noopener,noreferrer');toast('Share window opened')});
-  $('#copyShareLink').onclick=async()=>{const ok=await copyText(shareUrl);toast(ok?'Guest-only invitation link copied':'Copy the link from the prompt')};
-  // Automatically copy once when the share panel opens, when the browser permits it.
-  copyText(shareUrl).then(ok=>{if(ok)toast('Guest-only invitation link copied')}).catch(()=>{});
+  $('#copyShareLink').onclick=async()=>{const ok=await copyText(shareUrl);toast(ok?'Guest invitation link copied':'Copy the link from the prompt')};
   $('#shareDownloadFallback').onclick=()=>downloadRecord(rec);
+  $('#openGuestView').onclick=()=>{window.location.href=shareUrl};
   $('#shareNativeAgain').onclick=()=>sharePdfOrLink(rec,shareUrl,true);
+  // Try once immediately, but never replace the guest link with an editor link.
+  copyText(shareUrl).then(ok=>{if(ok)toast('Guest invitation link copied')}).catch(()=>{});
 }
 async function copyText(text){
   try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true}}catch{}
@@ -253,7 +252,9 @@ async function shareRecord(rec){
   const shareUrl=buildShareUrl();
   rec.sharedAt=new Date().toISOString();rec.shareUrl=shareUrl;
   await put(rec);state.records=await getAll();
-  if(await sharePdfOrLink(rec,shareUrl,false))return;
+  // Always show our Wedding Invitation Studio share panel first.
+  // The native phone share sheet is available as an explicit option inside it,
+  // so the user can always see Copy Link + social options before sharing.
   openSocialShare(rec,shareUrl);
 }
 $('#downloadBtn').onclick=async()=>{const rec=await ensureGenerated();if(rec){downloadRecord(rec);toast('PDF downloaded and saved in Generated Cards')}};
@@ -266,10 +267,10 @@ async function cardAction(act,id){const r=state.records.find(x=>x.id===id);if(!r
 function openRecord(r){const url=URL.createObjectURL(r.pdfBlob);$('#modalContent').innerHTML=`<h2>${escapeHtml(r.name)}</h2><p>${escapeHtml(r.address)}</p><p class="inv-meta">${formatDate(r.createdAt)} · ${escapeHtml(r.filename)}</p><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px"><button class="btn primary" id="mDownload">Download</button><button class="btn share" id="mShare">Share</button><button class="btn ghost" id="mEdit">Edit</button></div><div style="margin-top:18px;border-radius:14px;overflow:hidden;border:1px solid var(--line)"><iframe title="Invitation PDF" src="${url}" style="width:100%;height:520px;border:0"></iframe></div>`;$('#modal').classList.remove('hidden');$('#mDownload').onclick=()=>downloadRecord(r);$('#mShare').onclick=()=>shareRecord(r);$('#mEdit').onclick=()=>{closeModal();editRecord(r)}}
 function closeModal(){$('#modal').classList.add('hidden');$('#modalContent').innerHTML=''}$('#modalClose').onclick=closeModal;$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
 function editRecord(r){switchView('create');state.editingRecordId=r.id;state.generated=r;state.dirty=true;$('#guestName').value=r.name;$('#guestAddress').value=r.address;if(r.layout)state.template={id:r.templateId||'record',name:r.templateName||'Saved card layout',layout:cloneLayout(r.layout)};syncEditorFromTemplate();syncActionButtons();renderPage();refreshDuplicate();toast('Edit the details, then Download or Share to save the update')}
-$('#newCardBtn').onclick=()=>{switchView('create');$('#clearBtn').click();state.template={id:'default',name:'Default Card Layout',layout:cloneLayout(DEFAULT_LAYOUT)};syncEditorFromTemplate();syncActionButtons()};$('#searchInput').oninput=renderCards;$('#sortSelect').onchange=renderCards;
+$('#newCardBtn').onclick=()=>{switchView('create');$('#clearBtn').click();applyMainPreset();syncEditorFromTemplate();syncActionButtons()};$('#searchInput').oninput=renderCards;$('#sortSelect').onchange=renderCards;
 
 function templateById(id,list){return list.find(t=>t.id===id)}
-async function refreshTemplateSelect(){const list=await getTemplates();const sel=$('#templateSelect');sel.innerHTML=`<option value="default">Default Card Layout</option>`+list.map(t=>`<option value="${escapeHtml(t.id)}">${escapeHtml(t.name)}</option>`).join('');sel.value=state.template.id==='default'?'default':state.template.id}
+async function refreshTemplateSelect(){const list=await getTemplates();const sel=$('#templateSelect');sel.innerHTML=`<option value="main-preset">Main Preset</option>`+list.map(t=>`<option value="${escapeHtml(t.id)}">${escapeHtml(t.name)}</option>`).join('');sel.value=state.template.id==='main-preset'?'main-preset':state.template.id}
 function fieldConfig(field){return state.template.layout[field]}
 function syncEditorFromTemplate(){
   $('#templateName').value=state.template.name;
@@ -281,10 +282,10 @@ function syncEditorFromTemplate(){
 }
 function bindRange(field,key){const id=field+key[0].toUpperCase()+key.slice(1);const input=$('#'+id),out=$('#'+id+'Value');input.addEventListener('input',()=>{state.template.layout[field][key]=Number(input.value);state.dirty=true;out.textContent=Math.round(Number(input.value));renderPage();syncActionButtons();saveMainPreset()})}
 for(const f of ['name','address']){for(const k of ['x','y','fontSize','maxWidth'])bindRange(f,k);$('#'+f+'Font').addEventListener('change',e=>{state.template.layout[f].fontFamily=e.target.value;state.dirty=true;renderPage();saveMainPreset()});$('#'+f+'Weight').addEventListener('change',e=>{state.template.layout[f].fontWeight=Number(e.target.value);state.dirty=true;renderPage();saveMainPreset()});$('#'+f+'Align').addEventListener('change',e=>{state.template.layout[f].align=e.target.value;state.dirty=true;renderPage();saveMainPreset()});$('#'+f+'Color').addEventListener('input',e=>{state.template.layout[f].color=e.target.value;state.dirty=true;renderPage();saveMainPreset()})}
-$('#resetLayout').onclick=()=>{state.template={id:'default',name:'Default Card Layout',layout:cloneLayout(DEFAULT_LAYOUT)};state.dirty=true;syncEditorFromTemplate();toast('Layout reset')};
-$('#saveTemplate').onclick=async()=>{const name=$('#templateName').value.trim()||'Untitled card layout';const id=state.template.id==='default'?uuid():state.template.id;state.template={id,name,layout:cloneLayout(state.template.layout)};state.dirty=true;await putTemplate(state.template);await refreshTemplateSelect();$('#templateSelect').value=id;toast('Template saved locally')};
-$('#deleteTemplate').onclick=async()=>{const id=$('#templateSelect').value;if(id==='default'){toast('The default layout cannot be deleted.');return}if(confirm('Delete this saved layout?')){await deleteTemplate(id);state.template={id:'default',name:'Default Card Layout',layout:cloneLayout(DEFAULT_LAYOUT)};state.dirty=true;syncEditorFromTemplate();await refreshTemplateSelect();toast('Template deleted')}};
-$('#templateSelect').onchange=async e=>{const id=e.target.value;if(id==='default'){state.template={id:'default',name:'Default Card Layout',layout:cloneLayout(DEFAULT_LAYOUT)};state.dirty=true;syncEditorFromTemplate();return}const t=templateById(id,await getTemplates());if(t){state.template={id:t.id,name:t.name,layout:cloneLayout(t.layout)};state.dirty=true;syncEditorFromTemplate();toast(`Loaded ${t.name}`)}};
+$('#resetLayout').onclick=()=>{applyMainPreset();state.dirty=true;syncEditorFromTemplate();toast('Main Preset restored')};
+$('#saveTemplate').onclick=async()=>{const name=$('#templateName').value.trim()||'Untitled card layout';const id=(state.template.id==='main-preset'||state.template.id==='default')?uuid():state.template.id;state.template={id,name,layout:cloneLayout(state.template.layout)};state.dirty=true;await putTemplate(state.template);await refreshTemplateSelect();$('#templateSelect').value=id;toast('Template saved locally')};
+$('#deleteTemplate').onclick=async()=>{const id=$('#templateSelect').value;if(id==='main-preset'||id==='default'){toast('The Main Preset is part of the code and cannot be deleted.');return}if(confirm('Delete this saved layout?')){await deleteTemplate(id);applyMainPreset();state.dirty=true;syncEditorFromTemplate();await refreshTemplateSelect();toast('Main Preset restored')}};
+$('#templateSelect').onchange=async e=>{const id=e.target.value;if(id==='main-preset'){applyMainPreset();state.dirty=true;syncEditorFromTemplate();return}const t=templateById(id,await getTemplates());if(t){state.template={id:t.id,name:t.name,layout:cloneLayout(t.layout)};state.dirty=true;syncEditorFromTemplate();toast(`Loaded ${t.name}`)}};
 $('#fontReset').onclick=()=>{for(const f of ['name','address']){state.template.layout[f].fontFamily='NotoDeva';state.template.layout[f].fontWeight=700;state.template.layout[f].align='left';state.template.layout[f].color='#7c1f31';state.dirty=true}syncEditorFromTemplate();toast('Font settings reset')};
 
 function attachDrag(el,field){el.addEventListener('pointerdown',e=>{if(state.page!==1)return;const canvas=$('#previewCanvas');const rect=canvas.getBoundingClientRect();const pageW=state.pdf.getPage(1).view[2],pageH=state.pdf.getPage(1).view[3];const sx=rect.width/pageW,sy=rect.height/pageH;dragState={field,sx,sy,startX:e.clientX,startY:e.clientY,origX:state.template.layout[field].x,origY:state.template.layout[field].y};el.setPointerCapture(e.pointerId);el.classList.add('dragging')});el.addEventListener('pointermove',e=>{if(!dragState||dragState.field!==field)return;const dx=(e.clientX-dragState.startX)/dragState.sx,dy=(e.clientY-dragState.startY)/dragState.sy;state.template.layout[field].x=Math.max(0,Math.round(dragState.origX+dx));state.template.layout[field].y=Math.max(0,Math.round(dragState.origY-dy));syncEditorFromTemplate()});el.addEventListener('pointerup',()=>{dragState=null;el.classList.remove('dragging');state.dirty=true;syncActionButtons()});el.addEventListener('pointercancel',()=>{dragState=null;el.classList.remove('dragging')})}
@@ -297,7 +298,7 @@ function safeFile(s){return s.replace(/[\\/:*?"<>|]/g,'-')}
 async function importBackup(file){if(!window.JSZip){toast('Backup library is still loading.');return}try{const zip=await JSZip.loadAsync(file);const metaText=await zip.file('guest-records.json')?.async('string');if(!metaText)throw new Error('guest-records.json is missing.');const metas=JSON.parse(metaText);const templatesText=await zip.file('templates.json')?.async('string');if(templatesText){const ts=JSON.parse(templatesText);for(const t of ts||[])await putTemplate(t)}const pdfFiles=Object.values(zip.files).filter(x=>x.name.startsWith('pdf/')&&!x.dir);let imported=0;for(const m of metas){const match=pdfFiles.find(f=>f.name.toLowerCase().endsWith(safeFile(m.filename).toLowerCase()));if(!match)continue;const blob=new Blob([await match.async('uint8array')],{type:'application/pdf'});await put({...m,pdfBlob:blob,updatedAt:m.updatedAt||m.createdAt||new Date().toISOString()});imported++}state.records=await getAll();await refreshTemplateSelect();renderCards();toast(`${imported} invitation${imported===1?'':'s'} imported`)}catch(e){toast(e.message||'Could not import backup')}}
 $('#exportCsv').onclick=exportCsv;$('#exportBackup').onclick=exportBackup;$('#importBackup').onclick=()=>$('#backupFile').click();$('#backupFile').onchange=e=>{const f=e.target.files[0];if(f)importBackup(f);e.target.value=''};$('#clearData').onclick=async()=>{if(confirm('Delete all locally stored invitations and PDFs from this browser?')){await clearAll();state.records=[];renderCards();toast('All local invitation data cleared')}};
 
-function isInviteOnly(){return new URLSearchParams(window.location.search).get('invite')==='1'}
+function isInviteOnly(){return new URLSearchParams(window.location.search).get('invite')==='1'||window.location.pathname.replace(/\/$/,'')==='/invite'}
 async function renderInviteOnly(){
   const value=new URLSearchParams(window.location.search).get('card');
   if(!value)throw new Error('This invitation link is incomplete.');
@@ -308,15 +309,60 @@ async function renderInviteOnly(){
   const doc=await PDFLib.PDFDocument.load(bytes,{updateMetadata:false});
   const n=await renderTextPng(name,layout.name),a=await renderTextPng(address,layout.address);
   const ni=await doc.embedPng(n.bytes),ai=await doc.embedPng(a.bytes);const pg=doc.getPages()[0];
-  pg.drawImage(ni,{x:layout.name.x,y:layout.name.y,width:n.width,height:n.height});pg.drawImage(ai,{x:layout.address.x,y:layout.address.y,width:a.width,height:a.height});
+  pg.drawImage(ni,{x:layout.name.x,y:layout.name.y,width:n.width,height:n.height});
+  pg.drawImage(ai,{x:layout.address.x,y:layout.address.y,width:a.width,height:a.height});
   const out=new Blob([await doc.save({useObjectStreams:true,addDefaultPage:false})],{type:'application/pdf'});
   const url=URL.createObjectURL(out);const shareUrl=window.location.href;const fileName=filename(name,address);
-  document.body.className='invite-only-body';document.body.innerHTML=`<main class="invite-only"><div class="invite-top"><div><span class="invite-kicker">WEDDING INVITATION</span><h1>${escapeHtml(name)}</h1><p>${escapeHtml(address)}</p></div><button id="inviteShare" class="btn share">↗ Share PDF</button></div><div class="invite-pages"><iframe title="Wedding invitation" src="${url}"></iframe></div><div class="invite-actions"><button id="inviteDownload" class="btn secondary">Download PDF</button><button id="inviteCopy" class="btn ghost">Copy invitation link</button></div><p class="invite-note">This is the guest invitation view. The personalizer is not included in this link.</p></main>`;
+  document.body.className='invite-only-body';
+  document.body.innerHTML=`<main class="guest-site">
+    <header class="guest-header">
+      <div class="guest-brand"><div class="guest-mark">✦</div><div><span>WEDDING INVITATION</span><strong>Wedding Invitation Studio</strong><small>Guest invitation view</small></div></div>
+      <div class="guest-header-actions"><button id="inviteShare" class="btn share">↗ Share</button></div>
+    </header>
+    <section class="guest-welcome">
+      <div><div class="guest-kicker">YOU ARE INVITED</div><h1>${escapeHtml(name)}</h1><p>${escapeHtml(address)}</p></div>
+      <div class="guest-quick"><button id="inviteDownload" class="btn secondary">Download PDF</button><button id="inviteCopy" class="btn ghost">Copy invitation link</button></div>
+    </section>
+    <section class="guest-viewer-shell"><div class="guest-viewer-head"><div><strong>Your invitation</strong><small>All three pages · optimized for phone and desktop</small></div><span>3 pages</span></div><div id="guestPages" class="guest-pages"></div></section>
+    <footer class="guest-footer"><span>Wedding Invitation Studio</span><span>Guest-only link · Personalizer is not included</span></footer>
+  </main>`;
   const download=()=>downloadBlob(out,fileName);
   $('#inviteDownload').onclick=download;
   $('#inviteCopy').onclick=async()=>toast(await copyText(shareUrl)?'Invitation link copied':'Copy the link from the prompt');
-  $('#inviteShare').onclick=async()=>{const rec={name,address,pdfBlob:out,filename:fileName};if(!(await sharePdfOrLink(rec,shareUrl,true)))openInviteShareFallback(name,shareUrl,out,fileName)};
+  $('#inviteShare').onclick=async()=>{const rec={name,address,pdfBlob:out,filename:fileName};openInviteSharePanel(name,shareUrl,out,fileName,rec)};
+
+  const pdf=await pdfjsLib.getDocument({data:await out.arrayBuffer()}).promise;
+  const host=$('#guestPages');
+  for(let i=1;i<=pdf.numPages;i++){
+    const page=await pdf.getPage(i);
+    const base=page.getViewport({scale:1});
+    const maxW=Math.min(1120,Math.max(300,host.clientWidth));
+    const scale=maxW/base.width;
+    const viewport=page.getViewport({scale});
+    const card=document.createElement('article');card.className='guest-page';
+    const label=document.createElement('div');label.className='guest-page-label';label.textContent=`Page ${i} of ${pdf.numPages}`;
+    const canvas=document.createElement('canvas');canvas.width=Math.ceil(viewport.width*devicePixelRatio);canvas.height=Math.ceil(viewport.height*devicePixelRatio);canvas.style.width=viewport.width+'px';canvas.style.height=viewport.height+'px';
+    const ctx=canvas.getContext('2d',{alpha:false});
+    await page.render({canvasContext:ctx,viewport,transform:[devicePixelRatio,0,0,devicePixelRatio,0,0]}).promise;
+    card.append(label,canvas);host.appendChild(card);
+  }
+  window.addEventListener('resize',()=>{clearTimeout(window._guestResize);window._guestResize=setTimeout(()=>location.reload(),300)});
 }
+
+function openInviteSharePanel(name,shareUrl,blob,fileName,rec){
+  const text=`Wedding invitation for ${name}`;
+  const encText=encodeURIComponent(text),encUrl=encodeURIComponent(shareUrl);
+  const modal=document.createElement('div');modal.className='invite-share-fallback';
+  modal.innerHTML=`<div class="invite-share-card studio-share-card"><button class="invite-share-close">×</button><div class="share-modal-head"><div class="share-badge">✦</div><div><h2>Share wedding invitation</h2><p class="share-intro">Choose how you want to send this guest-only invitation. The recipient will see the invitation viewer, not the personalizer.</p></div></div><div class="share-link-box"><div><strong>Guest invitation link</strong><small>Opens the invitation viewer directly.</small></div><button class="mini-btn copy-now" id="guestCopyLink">Copy link</button></div><div class="share-grid"><button class="share-tile whatsapp" data-url="https://wa.me/?text=${encText}%20${encUrl}"><span>WhatsApp</span><small>Send guest link</small></button><button class="share-tile telegram" data-url="https://t.me/share/url?url=${encUrl}&text=${encText}"><span>Telegram</span><small>Send guest link</small></button><button class="share-tile facebook" data-url="https://www.facebook.com/sharer/sharer.php?u=${encUrl}"><span>Facebook</span><small>Share guest link</small></button><button class="share-tile xshare" data-url="https://twitter.com/intent/tweet?text=${encText}&url=${encUrl}"><span>X</span><small>Share guest link</small></button><button class="share-tile email" data-url="mailto:?subject=${encodeURIComponent('Wedding Invitation')}&body=${encodeURIComponent(text+'\n\n'+shareUrl)}"><span>Email</span><small>Send guest link</small></button><button class="share-tile native" id="guestNativeShare"><span>Share PDF to phone apps</span><small>Open the phone share sheet</small></button></div><div class="share-footer"><button class="btn primary" id="guestOpenView">Open guest view</button><button class="btn secondary" id="guestDownload">Download PDF</button></div></div>`;
+  document.body.appendChild(modal);
+  modal.querySelector('.invite-share-close').onclick=()=>modal.remove();
+  modal.querySelectorAll('[data-url]').forEach(b=>b.onclick=()=>window.open(b.dataset.url,'_blank','noopener,noreferrer'));
+  modal.querySelector('#guestCopyLink').onclick=async()=>toast(await copyText(shareUrl)?'Invitation link copied':'Copy the link from the prompt');
+  modal.querySelector('#guestOpenView').onclick=()=>{modal.remove();window.location.href=shareUrl};
+  modal.querySelector('#guestDownload').onclick=()=>downloadBlob(blob,fileName);
+  modal.querySelector('#guestNativeShare').onclick=async()=>{await sharePdfOrLink(rec,shareUrl,true)};
+}
+
 function openInviteShareFallback(name,shareUrl,blob,fileName){
   const enc=encodeURIComponent(shareUrl),txt=encodeURIComponent(`Wedding invitation for ${name}`);
   const modal=document.createElement('div');modal.className='invite-share-fallback';modal.innerHTML=`<div class="invite-share-card"><button class="invite-share-close">×</button><h2>Share invitation</h2><p>Direct PDF sharing is not available in this browser. These options share the guest-only invitation link.</p><div class="invite-share-grid"><a href="https://wa.me/?text=${txt}%20${enc}" target="_blank" rel="noopener">WhatsApp</a><a href="https://t.me/share/url?url=${enc}&text=${txt}" target="_blank" rel="noopener">Telegram</a><a href="https://www.facebook.com/sharer/sharer.php?u=${enc}" target="_blank" rel="noopener">Facebook</a><a href="mailto:?subject=${encodeURIComponent('Wedding Invitation')}&body=${encodeURIComponent('Wedding invitation for '+name+'\n\n'+shareUrl)}">Email</a></div><button class="btn secondary" id="inviteFallbackDownload">Download PDF</button></div>`;
@@ -328,9 +374,10 @@ function openInviteShareFallback(name,shareUrl,blob,fileName){
     if(isInviteOnly()){await renderInviteOnly();return;}
     await openDB();
     state.records=await getAll();
-    await refreshTemplateSelect();
     const hadShared=loadSharedPreset();
     if(!hadShared)applyMainPreset();
+    await refreshTemplateSelect();
+    syncEditorFromTemplate();
     await loadTemplate();
     renderCards();
     syncEditorFromTemplate();

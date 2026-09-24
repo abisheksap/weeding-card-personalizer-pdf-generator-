@@ -37,16 +37,16 @@
             <button class="mini-btn" id="resetLayout" type="button">Reset</button>
           </div>
           <div class="template-row">
-            <input id="templateName" placeholder="Template name" value="Default Card Layout" aria-label="Template name">
-            <select id="templateSelect" aria-label="Saved template"><option value="default">Default Card Layout</option></select>
+            <input id="templateName" placeholder="Template name" value="Main Preset" aria-label="Template name">
+            <select id="templateSelect" aria-label="Saved template"><option value="main-preset">Main Preset</option></select>
           </div>
           <div class="template-actions"><button class="mini-btn" id="saveTemplate" type="button">Save template</button><button class="mini-btn" id="deleteTemplate" type="button">Delete saved</button><button class="mini-btn" id="fontReset" type="button">Reset fonts</button></div>
 
           <div class="field-editor">
             <div class="field-title"><span>Name</span><small>PDF points · X from left · Y from bottom</small></div>
             <div class="range-grid">
-              <label>X <input id="nameX" type="range" min="0" max="595" step="1" value="155"><output id="nameXValue">155</output></label>
-              <label>Y <input id="nameY" type="range" min="0" max="842" step="1" value="145"><output id="nameYValue">145</output></label>
+              <label>X <input id="nameX" type="range" min="0" max="595" step="1" value="196"><output id="nameXValue">196</output></label>
+              <label>Y <input id="nameY" type="range" min="0" max="842" step="1" value="56"><output id="nameYValue">56</output></label>
               <label>Size <input id="nameFontSize" type="range" min="8" max="54" step="1" value="24"><output id="nameFontSizeValue">24</output></label>
               <label>Width <input id="nameMaxWidth" type="range" min="80" max="520" step="1" value="420"><output id="nameMaxWidthValue">420</output></label>
             </div>
@@ -61,8 +61,8 @@
           <div class="field-editor">
             <div class="field-title"><span>Address</span><small>Saved separately inside each template</small></div>
             <div class="range-grid">
-              <label>X <input id="addressX" type="range" min="0" max="595" step="1" value="235"><output id="addressXValue">235</output></label>
-              <label>Y <input id="addressY" type="range" min="0" max="842" step="1" value="82"><output id="addressYValue">82</output></label>
+              <label>X <input id="addressX" type="range" min="0" max="595" step="1" value="246"><output id="addressXValue">246</output></label>
+              <label>Y <input id="addressY" type="range" min="0" max="842" step="1" value="32"><output id="addressYValue">32</output></label>
               <label>Size <input id="addressFontSize" type="range" min="8" max="54" step="1" value="22"><output id="addressFontSizeValue">22</output></label>
               <label>Width <input id="addressMaxWidth" type="range" min="80" max="520" step="1" value="365"><output id="addressMaxWidthValue">365</output></label>
             </div>
@@ -103,7 +103,7 @@
       <div class="panel setting-card"><h2>Guest list</h2><p>Export names, addresses and creation dates as a CSV file.</p><button class="btn secondary" id="exportCsv">Export guest list</button></div>
       <div class="panel setting-card danger-card"><h2>Clear local data</h2><p>Removes generated invitations and PDFs from this browser. This cannot be undone.</p><button class="btn danger" id="clearData">Clear all data</button></div>
     </div>
-    <div class="about"><strong>Wedding Invitation Studio</strong><span>Local-first · No account · No server database</span><span>Template: wedding-card-v13-clean-pages-2-3-golden-stars-invite-share</span><span>The Main Preset is stored in the source code, so the same default is used on Vercel and every device.</span></div>
+    <div class="about"><strong>Wedding Invitation Studio</strong><span>Local-first · No account · No server database</span><span>Template: wedding-card-v18-unified-stars-custom-share-crisp</span><span>The Main Preset is stored in the source code, so the same default is used on Vercel and every device.</span></div>
   </section>
 </main>
 <nav class="mobile-nav"><button class="nav-btn active" data-view="create">Create</button><button class="nav-btn" data-view="cards">Cards</button><button class="nav-btn" data-view="settings">Settings</button></nav>
@@ -112,6 +112,6 @@
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script type="module" src="js/app.js"></script>
+<script type="module" src="js/app.js?v=18"></script>
 </body>
 </html>

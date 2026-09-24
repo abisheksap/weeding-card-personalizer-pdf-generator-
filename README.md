@@ -1,51 +1,32 @@
-# Wedding Invitation Studio
+# Wedding Invitation Studio — Final V18
 
-A local-first wedding invitation personalizer.
+## Deployment
+Deploy the contents of this folder as the Vercel project root.
 
-## Updated card template
-- Replaced the previous card template with the newly supplied 3-page scan.
-- Restored the same repeating pale-gold heart/leaf background language visible on Page 1 across all three card pages, including Pages 2 and 3. The restored pattern is part of the template PDF and remains visible in previews, downloads and shared PDFs.
-- Kept the high-resolution scan artwork and improved page-1 contrast/sharpness.
-- The raw uploaded scan is retained as `assets/card/wedding-invitation-source-scan.pdf`.
-
-## New layout/template editor
-- Drag the guest name and address directly on the page-1 preview.
-- Adjust X/Y position, font size, text width, font family, weight, alignment and color.
-- Save named layouts locally and load them later.
-- Each generated invitation stores the layout used for that PDF.
-- The restored pattern is included in the generated PDF on every page, including pages 2 and 3 where the scan is comparatively plain.
-- Saved templates are included in ZIP backups.
-
-## Run
-Serve this folder from a local web server (for example `python -m http.server`) and open `index.html`.
-
-### Shared cards
-Cards shared through the Share PDF action are persisted in the Generated Cards store before the native share sheet opens. Shared records retain their PDF, name/address, layout/template information, and a shared timestamp, so they remain available from Generated Cards even when sharing is cancelled or the browser does not support native file sharing.
-
-## Faster create/share/download workflow
-- There is no separate Generate PDF button anymore.
-- Enter the guest name and address; the live preview updates automatically.
-- Tap Download PDF or Share PDF and the PDF is generated automatically, saved to Generated Cards, and then downloaded/shared.
-- If you edit an existing card, Download/Share updates that same saved card instead of creating an extra copy.
-
-
-## Vercel-friendly sharing
-- The main name/address preset is remembered in `localStorage` on the current browser.
-- Share PDF first tries the native PDF file share; if unavailable, it shares/copies a self-contained URL.
-- The share URL carries the guest name, address, and current name/address layout so another device can open the personalized card without a server database.
-- The site remains static and works on Vercel without API routes or a backend.
-- The UI background now uses a layered, animated star-field effect while the original invitation artwork remains unchanged.
-
-
-## Latest design
-The invitation template uses a warm ivory background with a compact golden four-point star pattern that is masked away from the original pink artwork. The source PDF is `assets/card/final-template.pdf`.
+## Main Preset
+The permanent Main Preset is in `js/app.js` under `MAIN_PRESET`; it is not stored in browser localStorage.
 
 ## Sharing
-The Share PDF button uses the device Web Share API when it can attach the generated PDF. On desktop or browsers without file sharing, it opens WhatsApp, Telegram, Facebook, X, Email and Copy Link options for the personalized invitation URL.
+The main Share button opens the Wedding Invitation Studio share panel first. It does NOT immediately open the browser/Windows native share sheet. The panel includes:
+- Copy guest-only invitation link
+- WhatsApp
+- Telegram
+- Facebook
+- X
+- Email
+- Open guest view
+- Download PDF
+- Share PDF to phone apps (native share sheet, explicitly selected)
+
+The guest link opens `/invite?invite=1&card=...` and shows a responsive, full-width three-page invitation viewer without the personalizer.
+
+## PDF size
+The template PDF has been optimized and the generated name/address raster scale was reduced from 6x to 4x. This keeps Devanagari text crisp while avoiding unnecessarily large PDFs.
 
 
-## Latest card/share behavior
-- The original pink/red artwork is preserved; the old heart pattern is replaced only in the pale paper background with a restrained golden four-point star pattern.
-- Shared links use `?invite=1` and open a guest-only invitation view rather than the personalizer.
-- On supported mobile browsers, Share PDF uses the native file share sheet to send the actual PDF.
-- Fallback social buttons share the guest-only invitation link.
+## v19 fixes
+- Main Preset is hard-coded in js/app.js and appears as the default template selection.
+- Main Preset settings use Name X 196, Y 56, size 24, width 420; Address X 246, Y 32, size 22, width 365; Noto Sans Devanagari Bold, left aligned, #7c1f31.
+- Main Share PDF opens the custom Wedding Invitation Studio share panel first; native device sharing is only an option inside that panel.
+- Text rendering uses a 3x high-resolution canvas to keep Devanagari crisp while reducing generated PDF size.
+- Guest view remains a full-width invitation webpage rather than a small embedded PDF viewer.
