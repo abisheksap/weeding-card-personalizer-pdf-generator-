@@ -2,7 +2,7 @@ import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
 
 const TEMPLATE_URL='assets/card/final-template.pdf';
-const TEMPLATE_VERSION='wedding-card-v14-unified-page1-stars-crisp-guest-view';
+const TEMPLATE_VERSION='wedding-card-v15-vercel-guest-route-unified-stars';
 // MAIN PRESET — stored in the source code, not browser storage.
 // Change these values if you want a different default on every Vercel deployment/device.
 const MAIN_PRESET={
@@ -80,9 +80,7 @@ function decodeShareState(value){
   return JSON.parse(new TextDecoder().decode(bytes));
 }
 function buildShareUrl(){
-  const url=new URL(window.location.href);
-  url.search='';
-  url.hash='';
+  const url=new URL('/invite',window.location.origin);
   url.searchParams.set('invite','1');
   url.searchParams.set('card',encodeShareState({
     name:$('#guestName').value.trim(),
@@ -298,7 +296,7 @@ function safeFile(s){return s.replace(/[\\/:*?"<>|]/g,'-')}
 async function importBackup(file){if(!window.JSZip){toast('Backup library is still loading.');return}try{const zip=await JSZip.loadAsync(file);const metaText=await zip.file('guest-records.json')?.async('string');if(!metaText)throw new Error('guest-records.json is missing.');const metas=JSON.parse(metaText);const templatesText=await zip.file('templates.json')?.async('string');if(templatesText){const ts=JSON.parse(templatesText);for(const t of ts||[])await putTemplate(t)}const pdfFiles=Object.values(zip.files).filter(x=>x.name.startsWith('pdf/')&&!x.dir);let imported=0;for(const m of metas){const match=pdfFiles.find(f=>f.name.toLowerCase().endsWith(safeFile(m.filename).toLowerCase()));if(!match)continue;const blob=new Blob([await match.async('uint8array')],{type:'application/pdf'});await put({...m,pdfBlob:blob,updatedAt:m.updatedAt||m.createdAt||new Date().toISOString()});imported++}state.records=await getAll();await refreshTemplateSelect();renderCards();toast(`${imported} invitation${imported===1?'':'s'} imported`)}catch(e){toast(e.message||'Could not import backup')}}
 $('#exportCsv').onclick=exportCsv;$('#exportBackup').onclick=exportBackup;$('#importBackup').onclick=()=>$('#backupFile').click();$('#backupFile').onchange=e=>{const f=e.target.files[0];if(f)importBackup(f);e.target.value=''};$('#clearData').onclick=async()=>{if(confirm('Delete all locally stored invitations and PDFs from this browser?')){await clearAll();state.records=[];renderCards();toast('All local invitation data cleared')}};
 
-function isInviteOnly(){return new URLSearchParams(window.location.search).get('invite')==='1'}
+function isInviteOnly(){return new URLSearchParams(window.location.search).get('invite')==='1'||window.location.pathname.replace(/\/$/,'')==='/invite'}
 async function renderInviteOnly(){
   const value=new URLSearchParams(window.location.search).get('card');
   if(!value)throw new Error('This invitation link is incomplete.');

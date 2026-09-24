@@ -56,4 +56,7 @@ The Share PDF button uses the device Web Share API when it can attach the genera
 - Pages 2 and 3 use the cleaner source artwork with denoising/sharpening; decorative stars are masked away from dark/red text and artwork.
 - Guest share links render a dedicated guest-only three-page viewer inside the same website instead of the browser PDF iframe.
 - The personalizer share modal includes an Open guest view action, guest-only Copy link, native phone PDF sharing, and social/link fallbacks.
-# weeding-card-personalizer-pdf-generator-
+
+
+## Vercel guest route
+Share links use `/invite?invite=1&card=...`; Vercel rewrites `/invite` to the same app shell, which then switches into the guest-only viewer. App shell and JavaScript are versioned and served with no-store headers to prevent stale service-worker deployments from hiding the guest view.
