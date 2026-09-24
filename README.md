@@ -1,5 +1,11 @@
-# Wedding Invitation Studio v33
+# Wedding Invitation Studio v35
 
-Share menu fix: the Share button opens the share menu without waiting for PDF generation. Share PDF generates the PDF only when selected; Share Link works independently. Native Web Share is used where supported, with social fallbacks.
+Complete build with fixed guest sharing URL generation.
 
-Hard-coded Main Preset and all prior design/features are retained.
+## Important fix
+The previous Share flow used `btoa(...)` and then manually removed `%` from encoded padding, producing malformed URLs ending in `3D3D` (for example `...ifQ3D3D`). v35 uses the same Base64URL encoder as the guest decoder, so generated links are clean and valid.
+
+Example:
+`/i/eyJuYW1lIjoiQWJpc2hhIFNwa290YSBTaGFybWEiLCJhZGRyZXNzIjoiQmFyYXRwdXIifQ`
+
+No `3D3D` suffix is added.

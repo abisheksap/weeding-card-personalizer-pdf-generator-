@@ -314,7 +314,8 @@ async function shareRecord(rec){
   const name=$('#guestName').value.trim(), address=$('#guestAddress').value.trim();
   const current=rec||{name,address,pdfBlob:null,filename:filename(name,address)};
   // Open the menu immediately from the user click. Never wait for compression/PDF generation.
-  const immediateUrl=new URL('/i/'+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify({name,address}))))).replace(/%/g,''),window.location.origin).toString();
+  const immediateToken=encodeShareState({name,address});
+  const immediateUrl=new URL('/i/'+immediateToken,window.location.origin).toString();
   openSocialShare(current,immediateUrl);
   try{
     const shareUrl=await buildCompactShareUrl();
