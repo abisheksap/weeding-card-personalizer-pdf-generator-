@@ -2,7 +2,7 @@ import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
 
 const TEMPLATE_URL='assets/card/final-template.pdf';
-const TEMPLATE_VERSION='wedding-card-v29-share-fixed';
+const TEMPLATE_VERSION='wedding-card-v30-share-menu-fixed';
 // MAIN PRESET — stored in the source code, not browser storage.
 // Change these values if you want a different default on every Vercel deployment/device.
 const MAIN_PRESET={
@@ -258,7 +258,7 @@ function openSocialShare(rec,shareUrl){
   const nativeLinkShare=async()=>{
     if(!navigator.share)return false;
     try{
-      await navigator.share({title:`Wedding Invitation — ${rec.name}`,text:`Wedding invitation for ${rec.name}.`,url:shareUrl});
+      await navigator.share({title:`Wedding Invitation — ${rec.name}`,text:'Abisha Sapkota Sharma Wedding invitation: 6-26',url:shareUrl});
       toast('Invitation link shared');
       return true;
     }catch(e){
@@ -268,8 +268,10 @@ function openSocialShare(rec,shareUrl){
   };
   $('#sharePdfChoice').onclick=async()=>{
     closeModal();
-    const ok=await sharePdfOrLink(rec,shareUrl,false);
-    if(!ok){openSocialShare(rec,shareUrl);toast('PDF file sharing is unavailable here. Choose Share Link instead.');}
+    const pdfRec=(rec?.pdfBlob)?rec:await ensureGenerated();
+    if(!pdfRec){toast('The PDF could not be prepared. Choose Share Link instead.');return;}
+    const ok=await sharePdfOrLink(pdfRec,shareUrl,false);
+    if(!ok){openSocialShare(pdfRec,shareUrl);toast('PDF file sharing is unavailable here. Choose Share Link instead.');}
   };
   $('#shareLinkChoice').onclick=async()=>{
     const ok=await nativeLinkShare();
@@ -308,11 +310,18 @@ async function sharePdfOrLink(rec,shareUrl,showFallback=false){
   return false;
 }
 async function shareRecord(rec){
-  if(!rec?.pdfBlob)return;
-  const shareUrl=await buildCompactShareUrl();
-  rec.sharedAt=new Date().toISOString();rec.shareUrl=shareUrl;rec.longShareUrl=shareUrl;
-  await put(rec);state.records=await getAll();
-  openSocialShare(rec,shareUrl);
+  try{
+    if(!validate())return;
+    const shareUrl=await buildCompactShareUrl();
+    // Do not require PDF generation just to open the Share menu.
+    // This keeps Share Link working even if the PDF engine/template is still loading.
+    const current=rec||{name:$('#guestName').value.trim(),address:$('#guestAddress').value.trim(),pdfBlob:null,filename:filename($('#guestName').value.trim(),$('#guestAddress').value.trim())};
+    if(rec){rec.sharedAt=new Date().toISOString();rec.shareUrl=shareUrl;rec.longShareUrl=shareUrl;await put(rec);state.records=await getAll();}
+    openSocialShare(current,shareUrl);
+  }catch(e){
+    console.error('Share menu failed',e);
+    toast('Share menu could not open. Please try again.');
+  }
 }
 $('#downloadBtn').onclick=async()=>{const rec=await ensureGenerated();if(rec){downloadRecord(rec);toast('PDF downloaded and saved in Generated Cards')}};
 $('#shareBtn').onclick=async()=>{try{const rec=await ensureGenerated();if(rec)await shareRecord(rec)}catch(e){console.error('Share failed',e);toast('Sharing could not be opened. Please try again.')}};
