@@ -1,7 +1,7 @@
 import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs';
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
 const TEMPLATE_URL='/assets/card/final-template.pdf';
-const FONT_URL='assets/fonts/NotoSansDevanagari-Bold.ttf';
+const FONT_URL='/assets/fonts/NotoSansDevanagari-Bold.ttf';
 const DEFAULT_LAYOUT={name:{page:0,x:193,y:59,maxWidth:420,fontSize:20,fontFamily:'NotoDeva',fontWeight:700,color:'#7c1f31',align:'left'},address:{page:0,x:244,y:34,maxWidth:365,fontSize:18,fontFamily:'NotoDeva',fontWeight:700,color:'#7c1f31',align:'left'}};
 const qs=s=>document.querySelector(s);
 function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
@@ -46,7 +46,10 @@ function shareLinkPanel(name,shareUrl,blob,fileName){
 
 async function decodeCompactToken(token){
   if(!token) throw new Error('This guest invitation link is incomplete.');
-  const kind=token[0], raw=token.slice(1).replace(/-/g,'+').replace(/_/g,'/');
+  // Supports both current compact tokens (g + gzip/base64url) and the
+  // older direct base64url JSON tokens already shared from earlier builds.
+  const kind=token[0];
+  const raw=(kind==='g'?token.slice(1):token).replace(/-/g,'+').replace(/_/g,'/');
   const padded=raw+'='.repeat((4-raw.length%4)%4);
   const binary=atob(padded), bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
   if(kind==='g'){
