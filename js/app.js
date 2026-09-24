@@ -2,7 +2,7 @@ import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
 
 const TEMPLATE_URL='assets/card/final-template.pdf';
-const TEMPLATE_VERSION='wedding-card-v25-short-links';
+const TEMPLATE_VERSION='wedding-card-v26-no-wait-compact-links';
 // MAIN PRESET — stored in the source code, not browser storage.
 // Change these values if you want a different default on every Vercel deployment/device.
 const MAIN_PRESET={
@@ -97,26 +97,28 @@ function decodeShareState(value){
   const binary=atob(padded),bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
   return JSON.parse(new TextDecoder().decode(bytes));
 }
-function buildLongShareUrl(){
-  const url=new URL('/invite',window.location.origin);
-  url.searchParams.set('invite','1');
-  url.searchParams.set('card',encodeShareState({
+async function encodeCompactShareState(obj){
+  const json=new TextEncoder().encode(JSON.stringify(obj));
+  try{
+    if('CompressionStream' in window){
+      const cs=new CompressionStream('gzip');
+      const writer=cs.writable.getWriter();
+      await writer.write(json); await writer.close();
+      const bytes=new Uint8Array(await new Response(cs.readable).arrayBuffer());
+      let binary=''; for(const b of bytes) binary+=String.fromCharCode(b);
+      return 'g'+btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    }
+  }catch(e){console.warn('Compact compression unavailable; using compact JSON.',e)}
+  let binary=''; json.forEach(b=>binary+=String.fromCharCode(b));
+  return 'j'+btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+async function buildCompactShareUrl(){
+  const token=await encodeCompactShareState({
     name:$('#guestName').value.trim(),
     address:$('#guestAddress').value.trim(),
     template:state.template
-  }));
-  return url.toString();
-}
-async function shortenShareUrl(longUrl){
-  try{
-    const r=await fetch('/api/shorten?url='+encodeURIComponent(longUrl),{cache:'no-store'});
-    if(!r.ok)throw new Error('shortener failed');
-    const data=await r.json();
-    return data.shortUrl||longUrl;
-  }catch(e){
-    console.warn('Short link unavailable; using full guest URL',e);
-    return longUrl;
-  }
+  });
+  return new URL('/i/'+token,window.location.origin).toString();
 }
 function loadSharedPreset(){
   try{
@@ -227,7 +229,7 @@ function downloadRecord(rec){
   downloadBlob(rec.pdfBlob,rec.filename||'Wedding Invitation.pdf');
 }
 function openSocialShare(rec,shareUrl){
-  const text=`Wedding invitation for ${rec.name}`;
+  const text=`Abisha Sapkota Sharma Wedding invitation: 6-26`;
   const encText=encodeURIComponent(text);
   const encUrl=encodeURIComponent(shareUrl);
   $('#modalContent').innerHTML=`
@@ -295,22 +297,20 @@ async function sharePdfOrLink(rec,shareUrl,showFallback=false){
   if(navigator.share){
     try{
       if(!navigator.canShare || navigator.canShare({files:[file]})){
-        await navigator.share({title:`Wedding Invitation — ${rec.name}`,text:`Personalized wedding invitation for ${rec.name}.`,files:[file]});
+        await navigator.share({title:`Wedding Invitation — ${rec.name}`,text:`Abisha Sapkota Sharma Wedding invitation: 6-26`,files:[file]});
         toast('PDF shared');return true;
       }
     }catch(e){if(e?.name==='AbortError'){toast('Share cancelled');return true}}
     // If file sharing is not supported, use the phone's normal share sheet with the guest-only link.
-    try{await navigator.share({title:`Wedding Invitation — ${rec.name}`,text:`Personalized wedding invitation for ${rec.name}.`,url:shareUrl});toast('Invitation link shared');return true}catch(e){if(e?.name==='AbortError'){toast('Share cancelled');return true}}
+    try{await navigator.share({title:`Wedding Invitation — ${rec.name}`,text:`Abisha Sapkota Sharma Wedding invitation: 6-26`,url:shareUrl});toast('Invitation link shared');return true}catch(e){if(e?.name==='AbortError'){toast('Share cancelled');return true}}
   }
   if(showFallback)toast('Phone sharing is not available in this browser. Use the social buttons below.');
   return false;
 }
 async function shareRecord(rec){
   if(!rec?.pdfBlob)return;
-  const longUrl=buildLongShareUrl();
-  toast('Preparing short invitation link…');
-  const shareUrl=await shortenShareUrl(longUrl);
-  rec.sharedAt=new Date().toISOString();rec.shareUrl=shareUrl;rec.longShareUrl=longUrl;
+  const shareUrl=await buildCompactShareUrl();
+  rec.sharedAt=new Date().toISOString();rec.shareUrl=shareUrl;rec.longShareUrl=shareUrl;
   await put(rec);state.records=await getAll();
   openSocialShare(rec,shareUrl);
 }
@@ -409,7 +409,7 @@ async function renderInviteOnly(){
 async function nativeLinkShare(name,shareUrl){
   if(!navigator.share)return false;
   try{
-    await navigator.share({title:`Wedding Invitation — ${name}`,text:`Wedding invitation for ${name}.`,url:shareUrl});
+    await navigator.share({title:`Wedding Invitation — ${name}`,text:`Abisha Sapkota Sharma Wedding invitation: 6-26`,url:shareUrl});
     toast('Invitation link shared');
     return true;
   }catch(e){
@@ -419,7 +419,7 @@ async function nativeLinkShare(name,shareUrl){
 }
 
 function openInviteSharePanel(name,shareUrl,blob,fileName,rec){
-  const text=`Wedding invitation for ${name}`;
+  const text=`Abisha Sapkota Sharma Wedding invitation: 6-26`;
   const encText=encodeURIComponent(text),encUrl=encodeURIComponent(shareUrl);
   const modal=document.createElement('div');modal.className='invite-share-fallback';
   modal.innerHTML=`<div class="invite-share-card studio-share-card"><button class="invite-share-close">×</button><div class="share-modal-head"><div class="share-badge">✦</div><div><h2>Share wedding invitation</h2><p class="share-intro">Choose <strong>Share PDF</strong> for the actual file, or <strong>Share Link</strong> for the fast guest webpage.</p></div></div><div class="share-choice-grid"><button class="share-choice pdf-choice" id="guestPdfChoice"><span class="share-choice-icon">▣</span><strong>Share PDF</strong><small>Send the actual PDF through your device's share sheet.</small></button><button class="share-choice link-choice" id="guestLinkChoice"><span class="share-choice-icon">↗</span><strong>Share Link</strong><small>Send a lightweight guest-only invitation page.</small></button></div><div id="guestLinkArea" class="link-share-area hidden"><div class="share-link-box"><div><strong>Guest invitation link</strong><small>Opens the invitation viewer directly.</small></div><button class="mini-btn copy-now" id="guestCopyLink">Copy link</button></div><div class="share-grid"><button class="share-tile whatsapp" data-url="https://wa.me/?text=${encText}%20${encUrl}"><span>WhatsApp</span><small>Send guest link</small></button><button class="share-tile telegram" data-url="https://t.me/share/url?url=${encUrl}&text=${encText}"><span>Telegram</span><small>Send guest link</small></button><button class="share-tile facebook" data-url="https://www.facebook.com/sharer/sharer.php?u=${encUrl}"><span>Facebook</span><small>Share guest link</small></button><button class="share-tile xshare" data-url="https://twitter.com/intent/tweet?text=${encText}&url=${encUrl}"><span>X</span><small>Share guest link</small></button><button class="share-tile email" data-url="mailto:?subject=${encodeURIComponent('Wedding Invitation')}&body=${encodeURIComponent(text+'\n\n'+shareUrl)}"><span>Email</span><small>Send guest link</small></button></div></div><div class="share-footer"><button class="btn primary" id="guestOpenView">Open guest view</button><button class="btn secondary" id="guestDownload">Download PDF</button></div></div>`;
@@ -439,8 +439,8 @@ function openInviteSharePanel(name,shareUrl,blob,fileName,rec){
 }
 
 function openInviteShareFallback(name,shareUrl,blob,fileName){
-  const enc=encodeURIComponent(shareUrl),txt=encodeURIComponent(`Wedding invitation for ${name}`);
-  const modal=document.createElement('div');modal.className='invite-share-fallback';modal.innerHTML=`<div class="invite-share-card"><button class="invite-share-close">×</button><h2>Share invitation</h2><p>Direct PDF sharing is not available in this browser. These options share the guest-only invitation link.</p><div class="invite-share-grid"><a href="https://wa.me/?text=${txt}%20${enc}" target="_blank" rel="noopener">WhatsApp</a><a href="https://t.me/share/url?url=${enc}&text=${txt}" target="_blank" rel="noopener">Telegram</a><a href="https://www.facebook.com/sharer/sharer.php?u=${enc}" target="_blank" rel="noopener">Facebook</a><a href="mailto:?subject=${encodeURIComponent('Wedding Invitation')}&body=${encodeURIComponent('Wedding invitation for '+name+'\n\n'+shareUrl)}">Email</a></div><button class="btn secondary" id="inviteFallbackDownload">Download PDF</button></div>`;
+  const enc=encodeURIComponent(shareUrl),txt=encodeURIComponent(`Abisha Sapkota Sharma Wedding invitation: 6-26`);
+  const modal=document.createElement('div');modal.className='invite-share-fallback';modal.innerHTML=`<div class="invite-share-card"><button class="invite-share-close">×</button><h2>Share invitation</h2><p>Direct PDF sharing is not available in this browser. These options share the guest-only invitation link.</p><div class="invite-share-grid"><a href="https://wa.me/?text=${txt}%20${enc}" target="_blank" rel="noopener">WhatsApp</a><a href="https://t.me/share/url?url=${enc}&text=${txt}" target="_blank" rel="noopener">Telegram</a><a href="https://www.facebook.com/sharer/sharer.php?u=${enc}" target="_blank" rel="noopener">Facebook</a><a href="mailto:?subject=${encodeURIComponent('Wedding Invitation')}&body=${encodeURIComponent('Abisha Sapkota Sharma Wedding invitation: 6-26\n\n'+shareUrl)}">Email</a></div><button class="btn secondary" id="inviteFallbackDownload">Download PDF</button></div>`;
   document.body.appendChild(modal);modal.querySelector('.invite-share-close').onclick=()=>modal.remove();modal.querySelector('#inviteFallbackDownload').onclick=()=>downloadBlob(blob,fileName);
 }
 

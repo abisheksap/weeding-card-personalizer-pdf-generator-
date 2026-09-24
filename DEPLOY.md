@@ -8,7 +8,7 @@ Upload the contents of this folder as the Vercel project root.
 - Output Directory: empty
 - Install Command: empty
 
-This version includes an `/api/shorten` Vercel function. It turns the long guest invitation URL into a compact TinyURL before Share Link / Copy Link use it. If the shortener is temporarily unavailable, the app automatically falls back to the full guest URL so sharing still works.
+This version generates compact `/i/<token>` guest links directly in the browser using gzip compression. There is no external shortener and no redirect wait. Vercel rewrites `/i/*` directly to the guest viewer.
 
 Main Preset is hard-coded in `js/app.js` and is not browser-saved:
 - Name X 193, Y 59, Size 20, Width 420

@@ -1,10 +1,13 @@
-# Short guest links
+# Compact invitation links
 
-This build creates the personalized guest URL as before, then asks the Vercel `/api/shorten` function to create a compact TinyURL. Sharing and Copy Link use the compact URL when the shortener is available; if the shortener is unavailable, the full guest URL is used automatically.
+This version no longer calls TinyURL or any external URL shortener, so there is no 7-second redirect/wait.
 
-No API key is required for the bundled TinyURL endpoint. The guest page remains isolated at `/invite` and the short URL redirects to that guest-only page.
+The personalizer creates a compact URL directly on the Vercel domain:
 
-The Main Preset is hard-coded in `js/app.js` and uses:
-- Name: X 193, Y 59, Size 20, Width 420
-- Address: X 244, Y 34, Size 18, Width 365
-- Noto Sans Devanagari, Bold, Left, #7c1f31
+`/i/<token>`
+
+The token contains the invitation data in a gzip-compressed, URL-safe payload. Vercel rewrites `/i/*` to `guest.html`, which decodes the token immediately in the browser.
+
+This keeps the link much shorter than the previous full `?card=...` URL and avoids an external redirect service.
+
+The guest viewer also no longer rerenders on ordinary `resize` events because mobile browsers can emit resize while the address bar collapses during scrolling. It only re-renders after a real orientation change.

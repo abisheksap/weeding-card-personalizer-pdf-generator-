@@ -28,33 +28,58 @@ async function renderPages(blob){
   const pdf=await pdfjsLib.getDocument({data:await blob.arrayBuffer()}).promise;const host=qs('#guestPages');host.innerHTML='';
   for(let i=1;i<=pdf.numPages;i++){const page=await pdf.getPage(i),base=page.getViewport({scale:1}),maxW=Math.min(1120,Math.max(300,host.clientWidth)),scale=maxW/base.width,viewport=page.getViewport({scale});const card=document.createElement('article');card.className='guest-page';const label=document.createElement('div');label.className='guest-page-label';label.textContent=`Page ${i} of ${pdf.numPages}`;const canvas=document.createElement('canvas');canvas.width=Math.ceil(viewport.width*devicePixelRatio);canvas.height=Math.ceil(viewport.height*devicePixelRatio);canvas.style.width=viewport.width+'px';canvas.style.height=viewport.height+'px';const ctx=canvas.getContext('2d',{alpha:false});await page.render({canvasContext:ctx,viewport,transform:[devicePixelRatio,0,0,devicePixelRatio,0,0]}).promise;card.append(label,canvas);host.appendChild(card)}
 }
-async function shortenShareUrl(longUrl){
- try{const r=await fetch('/api/shorten?url='+encodeURIComponent(longUrl),{cache:'no-store'});if(!r.ok)throw new Error('shortener failed');const d=await r.json();return d.shortUrl||longUrl}catch(e){console.warn('Short link unavailable; using full guest URL',e);return longUrl}
-}
-async function nativePdfShare(blob,name,shareUrl){if(!navigator.share)return false;const file=new File([blob],name,{type:'application/pdf'});if(navigator.canShare&&!navigator.canShare({files:[file]}))return false;try{await navigator.share({title:`Wedding Invitation — ${name.replace(/\s+/g,' ')}`,text:'Personalized wedding invitation',files:[file]});toast('PDF shared');return true}catch(e){if(e?.name==='AbortError')toast('Share cancelled');return true}}
+async function nativePdfShare(blob,name,shareUrl){if(!navigator.share)return false;const file=new File([blob],name,{type:'application/pdf'});if(navigator.canShare&&!navigator.canShare({files:[file]}))return false;try{await navigator.share({title:`Wedding Invitation — ${name.replace(/\s+/g,' ')}`,text:'Abisha Sapkota Sharma Wedding invitation: 6-26',files:[file]});toast('PDF shared');return true}catch(e){if(e?.name==='AbortError')toast('Share cancelled');return true}}
 async function nativeLinkShare(name,shareUrl){
  if(!navigator.share)return false;
- try{await navigator.share({title:`Wedding Invitation — ${name}`,text:`Wedding invitation for ${name}.`,url:shareUrl});toast('Invitation link shared');return true}
+ try{await navigator.share({title:`Wedding Invitation — ${name}`,text:`Abisha Sapkota Sharma Wedding invitation: 6-26`,url:shareUrl});toast('Invitation link shared');return true}
  catch(e){if(e?.name==='AbortError'){toast('Share cancelled');return true}return false}
 }
 function shareLinkPanel(name,shareUrl,blob,fileName){
- const modal=document.createElement('div');modal.className='invite-share-fallback';const enc=encodeURIComponent(shareUrl),txt=encodeURIComponent(`Wedding invitation for ${name}`);
- modal.innerHTML=`<div class="invite-share-card studio-share-card"><button class="invite-share-close">×</button><div class="share-modal-head"><div class="share-badge">✦</div><div><h2>Share wedding invitation</h2><p class="share-intro">Choose <strong>Share PDF</strong> to send the file, or <strong>Share Link</strong> to send the guest webpage through your device's apps.</p></div></div><div class="share-choice-grid"><button class="share-choice pdf-choice" id="guestPdf"><span class="share-choice-icon">▣</span><strong>Share PDF</strong><small>Send the actual PDF through your device's share sheet.</small></button><button class="share-choice link-choice" id="guestLink"><span class="share-choice-icon">↗</span><strong>Share Link</strong><small>Send the guest-only invitation link through your device's share sheet.</small></button></div><div id="linkArea" class="link-share-area hidden"><div class="share-link-box"><div><strong>Guest invitation link</strong><small>Personalizer is not included in this route.</small></div><button class="mini-btn" id="copyLink">Copy link</button></div><div class="share-grid"><button class="share-tile whatsapp" data-url="https://wa.me/?text=${txt}%20${enc}"><span>WhatsApp</span><small>Guest link</small></button><button class="share-tile telegram" data-url="https://t.me/share/url?url=${enc}&text=${txt}"><span>Telegram</span><small>Guest link</small></button><button class="share-tile facebook" data-url="https://www.facebook.com/sharer/sharer.php?u=${enc}"><span>Facebook</span><small>Guest link</small></button><button class="share-tile messenger" data-url="https://www.facebook.com/dialog/send?link=${enc}"><span>Messenger</span><small>Guest link</small></button><button class="share-tile xshare" data-url="https://twitter.com/intent/tweet?text=${txt}&url=${enc}"><span>X</span><small>Guest link</small></button><button class="share-tile email" data-url="mailto:?subject=${encodeURIComponent('Wedding Invitation')}&body=${encodeURIComponent(`Wedding invitation for ${name}\n\n${shareUrl}`)}"><span>Email</span><small>Guest link</small></button></div></div><div class="share-footer"><button class="btn secondary" id="downloadGuest">Download PDF</button></div></div>`;
+ const modal=document.createElement('div');modal.className='invite-share-fallback';const enc=encodeURIComponent(shareUrl),txt=encodeURIComponent(`Abisha Sapkota Sharma Wedding invitation: 6-26`);
+ modal.innerHTML=`<div class="invite-share-card studio-share-card"><button class="invite-share-close">×</button><div class="share-modal-head"><div class="share-badge">✦</div><div><h2>Share wedding invitation</h2><p class="share-intro">Choose <strong>Share PDF</strong> to send the file, or <strong>Share Link</strong> to send the guest webpage through your device's apps.</p></div></div><div class="share-choice-grid"><button class="share-choice pdf-choice" id="guestPdf"><span class="share-choice-icon">▣</span><strong>Share PDF</strong><small>Send the actual PDF through your device's share sheet.</small></button><button class="share-choice link-choice" id="guestLink"><span class="share-choice-icon">↗</span><strong>Share Link</strong><small>Send the guest-only invitation link through your device's share sheet.</small></button></div><div id="linkArea" class="link-share-area hidden"><div class="share-link-box"><div><strong>Guest invitation link</strong><small>Personalizer is not included in this route.</small></div><button class="mini-btn" id="copyLink">Copy link</button></div><div class="share-grid"><button class="share-tile whatsapp" data-url="https://wa.me/?text=${txt}%20${enc}"><span>WhatsApp</span><small>Guest link</small></button><button class="share-tile telegram" data-url="https://t.me/share/url?url=${enc}&text=${txt}"><span>Telegram</span><small>Guest link</small></button><button class="share-tile facebook" data-url="https://www.facebook.com/sharer/sharer.php?u=${enc}"><span>Facebook</span><small>Guest link</small></button><button class="share-tile messenger" data-url="https://www.facebook.com/dialog/send?link=${enc}"><span>Messenger</span><small>Guest link</small></button><button class="share-tile xshare" data-url="https://twitter.com/intent/tweet?text=${txt}&url=${enc}"><span>X</span><small>Guest link</small></button><button class="share-tile email" data-url="mailto:?subject=${encodeURIComponent('Wedding Invitation')}&body=${encodeURIComponent(`Abisha Sapkota Sharma Wedding invitation: 6-26\n\n${shareUrl}`)}"><span>Email</span><small>Guest link</small></button></div></div><div class="share-footer"><button class="btn secondary" id="downloadGuest">Download PDF</button></div></div>`;
  document.body.appendChild(modal);
  modal.querySelector('.invite-share-close').onclick=()=>modal.remove();
  modal.querySelector('#guestPdf').onclick=async()=>{modal.remove();const ok=await nativePdfShare(blob,fileName,shareUrl);if(!ok)shareLinkPanel(name,shareUrl,blob,fileName)};
  modal.querySelector('#guestLink').onclick=async()=>{modal.remove();const ok=await nativeLinkShare(name,shareUrl);if(!ok){shareLinkPanel(name,shareUrl,blob,fileName);document.querySelector('#linkArea')?.classList.remove('hidden')}};
  modal.querySelector('#copyLink').onclick=async()=>toast(await copyText(shareUrl)?'Guest invitation link copied':'Copy the link from the prompt');modal.querySelectorAll('[data-url]').forEach(b=>b.onclick=()=>window.open(b.dataset.url,'_blank','noopener,noreferrer'));modal.querySelector('#downloadGuest').onclick=()=>downloadBlob(blob,fileName)
 }
+
+async function decodeCompactToken(token){
+  if(!token) throw new Error('This guest invitation link is incomplete.');
+  const kind=token[0], raw=token.slice(1).replace(/-/g,'+').replace(/_/g,'/');
+  const padded=raw+'='.repeat((4-raw.length%4)%4);
+  const binary=atob(padded), bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+  if(kind==='g'){
+    if(!('DecompressionStream' in window)) throw new Error('This browser cannot open the compact invitation link.');
+    const ds=new DecompressionStream('gzip');
+    const writer=ds.writable.getWriter(); await writer.write(bytes); await writer.close();
+    const out=new Uint8Array(await new Response(ds.readable).arrayBuffer());
+    return JSON.parse(new TextDecoder().decode(out));
+  }
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
 async function main(){
  try{
-  const params=new URLSearchParams(location.search),value=params.get('card');
-  if(!value)throw new Error('This guest invitation link is incomplete.');
-  const p=decodeShareState(value),name=p?.name||'',address=p?.address||'';if(!name&&!address)throw new Error('This invitation has no guest details.');
+  const pathMatch=location.pathname.match(/^\/i\/([^/?#]+)/i);
+  const compactToken=pathMatch?.[1];
+  const params=new URLSearchParams(location.search),legacyValue=params.get('card');
+  if(!compactToken&&!legacyValue)throw new Error('This guest invitation link is incomplete.');
+  const p=compactToken?await decodeCompactToken(compactToken):decodeShareState(legacyValue);
+  const name=p?.name||'',address=p?.address||'';if(!name&&!address)throw new Error('This invitation has no guest details.');
   const layout=p?.template?.layout?.name&&p?.template?.layout?.address?p.template.layout:DEFAULT_LAYOUT;
   await loadFont();const pdfBlob=await buildPdf(name,address,layout);const shareUrl=location.href;const fileName=filename(name,address);
   document.body.innerHTML=`<main class="guest-site"><header class="guest-header"><div class="guest-brand"><div class="guest-mark">✦</div><div><span>WEDDING INVITATION</span><strong>Wedding Invitation Studio</strong><small>Guest invitation view</small></div></div><div class="guest-header-actions"><button id="guestShareTop" class="btn share">↗ Share</button></div></header><section class="guest-welcome"><div><div class="guest-kicker">YOU ARE INVITED</div><h1>${escapeHtml(name)}</h1><p>${escapeHtml(address)}</p></div><div class="guest-quick"><button id="guestDownloadTop" class="btn secondary">Download PDF</button><button id="guestCopyTop" class="btn ghost">Copy invitation link</button></div></section><section class="guest-viewer-shell"><div class="guest-viewer-head"><div><strong>Your invitation</strong><small>All three pages · full-width guest view</small></div><span>3 pages</span></div><div id="guestPages" class="guest-pages"></div></section><footer class="guest-footer"><span>Wedding Invitation Studio</span><span>Guest-only invitation route</span></footer></main>`;
-  const download=()=>downloadBlob(pdfBlob,fileName);let shortShareUrl=shareUrl;const prepareShort=async()=>{shortShareUrl=await shortenShareUrl(shareUrl);return shortShareUrl};qs('#guestDownloadTop').onclick=download;qs('#guestCopyTop').onclick=async()=>toast(await copyText(await prepareShort())?'Invitation link copied':'Copy the link from the prompt');qs('#guestShareTop').onclick=async()=>{const u=await prepareShort();shareLinkPanel(name,u,pdfBlob,fileName)};await renderPages(pdfBlob);window.addEventListener('resize',()=>{clearTimeout(window._guestResize);window._guestResize=setTimeout(()=>renderPages(pdfBlob),250)});
+  const download=()=>downloadBlob(pdfBlob,fileName);
+  qs('#guestDownloadTop').onclick=download;
+  qs('#guestCopyTop').onclick=async()=>toast(await copyText(shareUrl)?'Invitation link copied':'Copy the link from the prompt');
+  qs('#guestShareTop').onclick=async()=>{shareLinkPanel(name,shareUrl,pdfBlob,fileName)};
+  await renderPages(pdfBlob);
+  // Mobile browsers can fire resize while the address bar expands/collapses during scrolling.
+  // Do not rerender the invitation in response to that event; only rerender after a real orientation change.
+  let lastWidth=window.innerWidth;
+  window.addEventListener('orientationchange',()=>{
+    setTimeout(()=>{if(Math.abs(window.innerWidth-lastWidth)>40){lastWidth=window.innerWidth;renderPages(pdfBlob);}},350);
+  },{passive:true});
  }catch(e){document.body.innerHTML=`<main class="guest-error-page"><div class="guest-error-card"><div class="guest-mark">✦</div><h1>Invitation link unavailable</h1><p>${escapeHtml(e.message||'This invitation could not be opened.')}</p><p class="guest-error-note">Ask the sender for a new invitation link.</p></div></main>`;console.error(e)}
 }
 main();
