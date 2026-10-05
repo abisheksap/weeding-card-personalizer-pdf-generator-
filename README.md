@@ -1,11 +1,41 @@
-# Wedding Invitation Studio v35
+# Wedding Invitation Studio
 
-Complete build with fixed guest sharing URL generation.
+Static/local-first wedding invitation personalizer built around the supplied 3-page wedding card.
 
-## Important fix
-The previous Share flow used `btoa(...)` and then manually removed `%` from encoded padding, producing malformed URLs ending in `3D3D` (for example `...ifQ3D3D`). v35 uses the same Base64URL encoder as the guest decoder, so generated links are clean and valid.
+## Run locally
 
-Example:
-`/i/eyJuYW1lIjoiQWJpc2hhIFNwa290YSBTaGFybWEiLCJhZGRyZXNzIjoiQmFyYXRwdXIifQ`
+Use a local HTTP server. Python is not required.
 
-No `3D3D` suffix is added.
+### Node.js
+
+```cmd
+npx serve .
+```
+
+### VS Code
+
+Use the Live Server extension and open `index.html` with Live Server.
+
+## Important
+
+Do not open `index.html` directly with `file:///`. IndexedDB, module loading, PDF assets and PWA behavior are intended to run under HTTP(S).
+
+## Features
+
+- Nepali / English / mixed Unicode input
+- Browser-native Devanagari shaping for generated text
+- Client-side PDF generation
+- Original 3-page card preserved
+- IndexedDB invitation register
+- Search, open, download, share, edit and delete
+- Duplicate detection
+- Backup/restore ZIP
+- CSV guest-list export
+- PWA structure
+- No backend or database
+
+## PDF personalization
+
+The overlay coordinates are in `js/app.js` under `LAYOUT`. They are calibrated for the supplied card.
+
+The final PDF uses the original supplied card as its master artwork. Personalized text is rendered by the browser at high resolution before being overlaid on page 1. This avoids broken Devanagari glyph boxes such as `□ □ □`.

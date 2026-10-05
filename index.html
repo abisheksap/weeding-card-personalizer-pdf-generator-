@@ -7,6 +7,9 @@
 <meta name="description" content="Private, local-first wedding invitation personalizer.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="assets/icons/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
 <title>Wedding Invitation Studio</title>
 </head>
@@ -30,64 +33,25 @@
         <input id="guestName" autocomplete="off" spellcheck="false" placeholder="श्रीमान् गणेश जी / Mr. Ganesh Ji">
         <label for="guestAddress">Address</label>
         <textarea id="guestAddress" rows="4" spellcheck="false" placeholder="भरतपुर–१०, चितवन / Bharatpur-10, Chitwan"></textarea>
-
-        <details class="editor-panel" open>
-          <summary class="editor-summary"><span><strong>Customize</strong><small>Adjust name, address, fonts and placement</small></span><span class="editor-chevron">⌄</span></summary>
-          <div class="editor-inner">
-          <div class="editor-head">
-            <div><strong>Adjust name & address</strong><small>Drag the text on the preview or fine-tune it below.</small></div>
-            <button class="mini-btn" id="resetLayout" type="button">Reset</button>
-          </div>
-          <div class="template-row">
-            <input id="templateName" placeholder="Template name" value="Main Preset" aria-label="Template name">
-            <select id="templateSelect" aria-label="Saved template"><option value="main-preset">Main Preset</option></select>
-          </div>
-          <div class="template-actions"><button class="mini-btn" id="saveTemplate" type="button">Save template</button><button class="mini-btn" id="deleteTemplate" type="button">Delete saved</button><button class="mini-btn" id="fontReset" type="button">Reset fonts</button></div>
-
-          <div class="field-editor">
-            <div class="field-title"><span>Name</span><small>PDF points · X from left · Y from bottom</small></div>
-            <div class="range-grid">
-              <label>X <input id="nameX" type="range" min="0" max="595" step="1" value="196"><output id="nameXValue">196</output></label>
-              <label>Y <input id="nameY" type="range" min="0" max="842" step="1" value="56"><output id="nameYValue">56</output></label>
-              <label>Size <input id="nameFontSize" type="range" min="8" max="54" step="1" value="24"><output id="nameFontSizeValue">24</output></label>
-              <label>Width <input id="nameMaxWidth" type="range" min="80" max="520" step="1" value="420"><output id="nameMaxWidthValue">420</output></label>
+        <details class="customize-details" id="customizeDetails">
+          <summary><span>Customize writing</span><span class="customize-chevron">⌄</span></summary>
+          <div class="customize-body">
+            <div class="customize-grid">
+              <label>Writing style<select id="fontStyle"><option value="kalam">Kalam · handwritten pen</option><option value="kalam-bold">Kalam · bold stylus</option></select></label>
+              <label>Ink finish<select id="inkFinish"><option value="glitter">Glitter pen · subtle sparkle</option><option value="ink">Rich ink · clean</option></select></label>
             </div>
-            <div class="font-grid">
-              <label>Font <select id="nameFont"><option value="NotoDeva">Noto Sans Devanagari</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Arial">Arial</option><option value="Trebuchet MS">Trebuchet MS</option><option value="Garamond">Garamond</option><option value="Palatino Linotype">Palatino Linotype</option><option value="Courier New">Courier New</option><option value="NotoDevaItalic">Noto Sans Devanagari Italic</option><option value="CursiveElegant">Elegant Cursive</option><option value="Handwritten">Handwritten</option><option value="BrushScript">Brush Script</option></select></label>
-              <label>Weight <select id="nameWeight"><option value="400">Regular</option><option value="700" selected>Bold</option></select></label>
-              <label>Align <select id="nameAlign"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
-              <label>Color <input id="nameColor" type="color" value="#7c1f31"></label>
-            </div>
-          </div>
-
-          <div class="field-editor">
-            <div class="field-title"><span>Address</span><small>Saved separately inside each template</small></div>
-            <div class="range-grid">
-              <label>X <input id="addressX" type="range" min="0" max="595" step="1" value="246"><output id="addressXValue">246</output></label>
-              <label>Y <input id="addressY" type="range" min="0" max="842" step="1" value="32"><output id="addressYValue">32</output></label>
-              <label>Size <input id="addressFontSize" type="range" min="8" max="54" step="1" value="22"><output id="addressFontSizeValue">22</output></label>
-              <label>Width <input id="addressMaxWidth" type="range" min="80" max="520" step="1" value="365"><output id="addressMaxWidthValue">365</output></label>
-            </div>
-            <div class="font-grid">
-              <label>Font <select id="addressFont"><option value="NotoDeva">Noto Sans Devanagari</option><option value="Georgia">Georgia</option><option value="Times New Roman">Times New Roman</option><option value="Arial">Arial</option><option value="Trebuchet MS">Trebuchet MS</option><option value="Garamond">Garamond</option><option value="Palatino Linotype">Palatino Linotype</option><option value="Courier New">Courier New</option><option value="NotoDevaItalic">Noto Sans Devanagari Italic</option><option value="CursiveElegant">Elegant Cursive</option><option value="Handwritten">Handwritten</option><option value="BrushScript">Brush Script</option></select></label>
-              <label>Weight <select id="addressWeight"><option value="400">Regular</option><option value="700" selected>Bold</option></select></label>
-              <label>Align <select id="addressAlign"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
-              <label>Color <input id="addressColor" type="color" value="#7c1f31"></label>
-            </div>
-          </div>
-          <div class="drag-hint" id="dragHint">Drag the name or address directly on the card preview.</div>
+            <p class="customize-note">Nepali and English use the same handwritten family so the two scripts feel like they were written with the same pen.</p>
           </div>
         </details>
-
         <div id="duplicateNotice" class="notice hidden"></div>
         <div id="formError" class="error hidden"></div>
-        <div class="form-actions"><button class="btn ghost" id="clearBtn">Clear</button><span class="instant-hint">Enter both fields, then use Download or Share — the PDF is created automatically and saved in Generated Cards.</span></div>
+        <div class="form-actions"><button class="btn ghost" id="clearBtn">Clear</button><button class="btn primary" id="previewBtn">Preview invitation</button></div>
         <div class="tip"><span>✓</span><div><strong>Private by design</strong><small>Names, addresses and generated PDFs stay in this browser unless you download or share them.</small></div></div>
       </div>
       <div class="panel preview-panel">
         <div class="panel-head"><div><h2>Preview</h2><p>Page <span id="pageNumber">1</span> of 3</p></div><div class="preview-tools"><button class="icon-btn" id="prevPage" aria-label="Previous page">←</button><button class="icon-btn" id="nextPage" aria-label="Next page">→</button></div></div>
-        <div class="preview-stage"><div id="patternOverlay" class="pattern-overlay" aria-hidden="true"></div><canvas id="previewCanvas"></canvas><div id="previewEmpty" class="preview-empty"><div class="empty-icon">💍</div><strong>Your personalized card will appear here.</strong><span>Enter a name and address to preview it.</span></div><div id="previewOverlay" class="preview-overlay" aria-hidden="true"><div id="previewName"></div><div id="previewAddress"></div></div></div>
-        <div class="preview-actions"><button class="btn secondary" id="downloadBtn" disabled>Download PDF</button><button class="btn share" id="shareBtn" type="button"><span aria-hidden="true">↗</span> Share</button></div>
+        <div class="preview-stage"><canvas id="previewCanvas"></canvas><div id="previewEmpty" class="preview-empty"><div class="empty-icon">💍</div><strong>Your personalized card will appear here.</strong><span>Enter a name and address to preview it.</span></div><div id="previewOverlay" class="preview-overlay" aria-hidden="true"><div id="previewName"></div><div id="previewAddress"></div></div></div>
+        <div class="preview-actions"><button class="btn secondary" id="downloadBtn" disabled>Download PDF</button><button class="btn share" id="shareBtn" disabled>Share PDF</button><button class="btn primary" id="generateBtn">Generate PDF</button></div>
       </div>
     </div>
   </section>
@@ -106,7 +70,7 @@
       <div class="panel setting-card"><h2>Guest list</h2><p>Export names, addresses and creation dates as a CSV file.</p><button class="btn secondary" id="exportCsv">Export guest list</button></div>
       <div class="panel setting-card danger-card"><h2>Clear local data</h2><p>Removes generated invitations and PDFs from this browser. This cannot be undone.</p><button class="btn danger" id="clearData">Clear all data</button></div>
     </div>
-    <div class="about"><strong>Wedding Invitation Studio</strong><span>Local-first · No account · No server database</span><span>Template: wedding-card-v32-share-button-fixed</span><span>The Main Preset is stored in the source code, so the same default is used on Vercel and every device.</span></div>
+    <div class="about"><strong>Wedding Invitation Studio</strong><span>Local-first · No account · No server database</span><span>Template: wedding-card-v2</span></div>
   </section>
 </main>
 <nav class="mobile-nav"><button class="nav-btn active" data-view="create">Create</button><button class="nav-btn" data-view="cards">Cards</button><button class="nav-btn" data-view="settings">Settings</button></nav>
@@ -115,6 +79,6 @@
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script type="module" src="js/app.js?v=31"></script>
+<script type="module" src="js/app.js"></script>
 </body>
 </html>
