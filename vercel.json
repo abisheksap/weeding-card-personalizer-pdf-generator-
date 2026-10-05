@@ -1,58 +1,18 @@
 {
-  "rewrites": [
-    {
-      "source": "/invite",
-      "destination": "/guest.html"
-    },
-    {
-      "source": "/i/:token*",
-      "destination": "/guest.html"
-    }
-  ],
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "outputDirectory": ".",
+  "cleanUrls": false,
   "headers": [
     {
-      "source": "/index.html",
+      "source": "/assets/card/(.*)",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, max-age=0, must-revalidate"
-        }
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
-      "source": "/js/app.js",
+      "source": "/assets/fonts/(.*)",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, max-age=0, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/js/guest.js",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, max-age=0, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/guest.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, max-age=0, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/css/styles.css",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, max-age=0, must-revalidate"
-        }
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     }
   ]

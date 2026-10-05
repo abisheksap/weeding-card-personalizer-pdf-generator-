@@ -1,41 +1,13 @@
-# Wedding Invitation Studio
+# Wedding Invitation Studio — Vercel Fix
 
-Static/local-first wedding invitation personalizer built around the supplied 3-page wedding card.
+This is the static Vercel-ready version of Wedding Invitation Studio.
 
-## Run locally
+## Vercel deployment
+- Framework Preset: **Other**
+- Build Command: **leave empty**
+- Output Directory: **.**
+- Root Directory: the folder containing `index.html` and `vercel.json`
 
-Use a local HTTP server. Python is not required.
+The included `vercel.json` explicitly serves the project root and keeps the wedding-card PDF/font assets available.
 
-### Node.js
-
-```cmd
-npx serve .
-```
-
-### VS Code
-
-Use the Live Server extension and open `index.html` with Live Server.
-
-## Important
-
-Do not open `index.html` directly with `file:///`. IndexedDB, module loading, PDF assets and PWA behavior are intended to run under HTTP(S).
-
-## Features
-
-- Nepali / English / mixed Unicode input
-- Browser-native Devanagari shaping for generated text
-- Client-side PDF generation
-- Original 3-page card preserved
-- IndexedDB invitation register
-- Search, open, download, share, edit and delete
-- Duplicate detection
-- Backup/restore ZIP
-- CSV guest-list export
-- PWA structure
-- No backend or database
-
-## PDF personalization
-
-The overlay coordinates are in `js/app.js` under `LAYOUT`. They are calibrated for the supplied card.
-
-The final PDF uses the original supplied card as its master artwork. Personalized text is rendered by the browser at high resolution before being overlaid on page 1. This avoids broken Devanagari glyph boxes such as `□ □ □`.
+The app uses browser-only IndexedDB for generated invitations; there is no backend database.

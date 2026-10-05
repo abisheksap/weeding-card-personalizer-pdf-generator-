@@ -1,7 +1,8 @@
 import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs';
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
 
-const TEMPLATE_URL='assets/card/wedding-invitation.pdf';
+const BASE_URL=new URL('./',window.location.href);
+const TEMPLATE_URL=new URL('assets/card/wedding-invitation.pdf',BASE_URL).href;
 const TEMPLATE_VERSION='wedding-card-v3-handwritten-glitter';
 const NAME_FONT='Kalam';
 const NAME_COLOR='#7b1f35';
@@ -29,9 +30,16 @@ function remove(id){return new Promise((resolve,reject)=>{const r=db.transaction
 function clearAll(){return new Promise((resolve,reject)=>{const r=db.transaction('invitations','readwrite').objectStore('invitations').clear();r.onsuccess=()=>resolve();r.onerror=()=>reject(r.error)})}
 
 async function loadTemplate(){
-  const bytes=await fetch(TEMPLATE_URL).then(r=>{if(!r.ok)throw new Error('Wedding card PDF could not be loaded.');return r.arrayBuffer()});
-  state.pdf=await pdfjsLib.getDocument({data:bytes.slice(0)}).promise;
-  renderPage();
+  const response=await fetch(TEMPLATE_URL,{cache:'no-store'});
+  if(!response.ok)throw new Error(`Wedding card PDF could not be loaded (HTTP ${response.status}). Check that assets/card/wedding-invitation.pdf was deployed.`);
+  const bytes=await response.arrayBuffer();
+  if(!bytes.byteLength)throw new Error('Wedding card PDF is empty. Re-deploy the project with the assets/card folder included.');
+  try{
+    state.pdf=await pdfjsLib.getDocument({data:bytes.slice(0),useWorkerFetch:false,isEvalSupported:true}).promise;
+  }catch(err){
+    throw new Error(`Wedding card PDF was found but could not be rendered. ${err?.message||'PDF.js failed to parse the file.'}`);
+  }
+  await renderPage();
   return bytes;
 }
 
@@ -87,8 +95,8 @@ async function renderTextPng(text,opts){
 function dataUrlToBytes(url){const b=atob(url.split(',')[1]);const out=new Uint8Array(b.length);for(let i=0;i<b.length;i++)out[i]=b.charCodeAt(i);return out}
 
 async function createPdf(name,address){
-  if(!window.PDFLib)throw new Error('PDF engine has not loaded yet. Refresh and try again.');
-  const source=await fetch(TEMPLATE_URL).then(r=>r.arrayBuffer()); const doc=await PDFLib.PDFDocument.load(source,{updateMetadata:false});
+  if(!window.PDFLib)throw new Error('PDF engine has not loaded yet. Refresh the page and try again.');
+  const response=await fetch(TEMPLATE_URL,{cache:'no-store'}); if(!response.ok)throw new Error(`Wedding card PDF could not be loaded (HTTP ${response.status}).`); const source=await response.arrayBuffer(); const doc=await PDFLib.PDFDocument.load(source,{updateMetadata:false});
   const page=doc.getPages()[0];
   const n=await renderTextPng(name,LAYOUT.name);const a=await renderTextPng(address,LAYOUT.address);
   const ni=await doc.embedPng(n.bytes), ai=await doc.embedPng(a.bytes);
@@ -101,8 +109,7 @@ async function refreshDuplicate(){const name=normalize($('#guestName').value),ad
 $('#guestName').addEventListener('input',()=>{showError('');refreshDuplicate();if(state.page===1&&state.pdf)renderPage()});$('#guestAddress').addEventListener('input',()=>{showError('');refreshDuplicate();if(state.page===1&&state.pdf)renderPage()});
 $('#fontStyle').addEventListener('change',e=>{state.fontStyle=e.target.value;closeCustomize();if(state.page===1&&state.pdf)renderPage()});
 $('#inkFinish').addEventListener('change',e=>{state.inkFinish=e.target.value;closeCustomize();if(state.page===1&&state.pdf)renderPage()});
-$('#customizeDetails').addEventListener('toggle',e=>{if(e.target.open){document.addEventListener('click',closeOnOutsideCustomize,{once:true});}});
-function closeOnOutsideCustomize(e){const d=$('#customizeDetails');if(d&&d.open&&!d.contains(e.target))d.removeAttribute('open');}
+document.addEventListener('click',e=>{const d=$('#customizeDetails');if(d&&d.open&&!d.contains(e.target))d.removeAttribute('open');});
 
 $('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderPage()}};$('#nextPage').onclick=()=>{if(state.pdf&&state.page<state.pdf.numPages){state.page++;renderPage()}};
 $('#previewBtn').onclick=()=>{if(validate())renderPage()};
@@ -132,6 +139,19 @@ function safeFile(s){return s.replace(/[\\/:*?"<>|]/g,'-')}
 async function importBackup(file){if(!window.JSZip){toast('Backup library is still loading.');return}try{const zip=await JSZip.loadAsync(file);const metaText=await zip.file('guest-records.json')?.async('string');if(!metaText)throw new Error('guest-records.json is missing.');const metas=JSON.parse(metaText);if(!Array.isArray(metas))throw new Error('Invalid backup format.');const pdfFiles=Object.values(zip.files).filter(x=>x.name.startsWith('pdf/')&&!x.dir);let imported=0;for(const m of metas){const match=pdfFiles.find(f=>f.name.toLowerCase().endsWith(safeFile(m.filename).toLowerCase()));if(!match)continue;const blob=new Blob([await match.async('uint8array')],{type:'application/pdf'});await put({...m,pdfBlob:blob,updatedAt:m.updatedAt||m.createdAt||new Date().toISOString()});imported++}state.records=await getAll();renderCards();toast(`${imported} invitation${imported===1?'':'s'} imported`)}catch(e){toast(e.message||'Could not import backup')}}
 $('#exportCsv').onclick=exportCsv;$('#exportBackup').onclick=exportBackup;$('#importBackup').onclick=()=>$('#backupFile').click();$('#backupFile').onchange=e=>{const f=e.target.files[0];if(f)importBackup(f);e.target.value=''};$('#clearData').onclick=async()=>{if(confirm('Delete all locally stored invitations and PDFs from this browser?')){await clearAll();state.records=[];renderCards();toast('All local invitation data cleared')}};
 
-(async()=>{try{await openDB();state.records=await getAll();await loadTemplate();renderCards()}catch(e){console.error(e);showError('The application could not initialize. Please run it from a local web server and refresh.')}})();
+(async()=>{
+  try{
+    if(!window.isSecureContext && location.protocol!=='http:') throw new Error('This app needs HTTPS (or localhost) to use browser storage.');
+    if(!window.indexedDB) throw new Error('IndexedDB is unavailable in this browser/private browsing mode.');
+    if(!window.PDFLib) throw new Error('The PDF engine did not load. Check your internet connection and refresh.');
+    await openDB();
+    state.records=await getAll();
+    await loadTemplate();
+    renderCards();
+  }catch(e){
+    console.error('[Wedding Invitation Studio] initialization failed:',e);
+    showError(e?.message || 'The application could not initialize.');
+  }
+})();
 window.addEventListener('resize',()=>{clearTimeout(window._rt);window._rt=setTimeout(()=>renderPage(),150)});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));}
