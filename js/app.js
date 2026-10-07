@@ -3,7 +3,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
 
 const BASE_URL=new URL('./',window.location.href);
 const TEMPLATE_URL=new URL('assets/card/wedding-invitation.pdf',BASE_URL).href;
-const TEMPLATE_VERSION='wedding-card-v3-handwritten-glitter';
+const TEMPLATE_VERSION='wedding-card-v4-final-vercel';
 const NAME_FONT='Kalam';
 const NAME_COLOR='#7b1f35';
 const GLITTER_COLORS=['#d7b46a','#f3dfaa','#fff4cf','#b8864a'];
@@ -23,7 +23,7 @@ function slugPart(v){return v.normalize('NFKC').replace(/[\\/:*?"<>|]/g,'-').rep
 function filename(name,address){return `${slugPart(name)} - ${slugPart(address)} - Wedding Invitation.pdf`}
 function uuid(){return crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)}
 
-function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('wedding-invitation-studio',2);req.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('invitations'))d.createObjectStore('invitations',{keyPath:'id'});};req.onsuccess=()=>{db=req.result;resolve()};req.onerror=()=>reject(req.error)});}
+function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('wedding-invitation-studio',4);req.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('invitations'))d.createObjectStore('invitations',{keyPath:'id'});};req.onsuccess=()=>{db=req.result;resolve()};req.onerror=()=>reject(req.error)});}
 function getAll(){return new Promise((resolve,reject)=>{const r=db.transaction('invitations','readonly').objectStore('invitations').getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error)})}
 function put(rec){return new Promise((resolve,reject)=>{const r=db.transaction('invitations','readwrite').objectStore('invitations').put(rec);r.onsuccess=()=>resolve();r.onerror=()=>reject(r.error)})}
 function remove(id){return new Promise((resolve,reject)=>{const r=db.transaction('invitations','readwrite').objectStore('invitations').delete(id);r.onsuccess=()=>resolve();r.onerror=()=>reject(r.error)})}
@@ -55,7 +55,7 @@ async function renderPage(){
   $('#pageNumber').textContent=state.page; $('#previewEmpty').classList.add('hidden');
   positionPreviewOverlay(viewport,page.view[2],page.view[3]);
 }
-function currentFontWeight(){return state.fontStyle==='kalam-bold'?700:700}
+function currentFontWeight(){return state.fontStyle==='kalam-bold'?700:400}
 function closeCustomize(){const d=$('#customizeDetails');if(d)d.removeAttribute('open')}
 function stylePreviewText(el){el.style.fontFamily=`${NAME_FONT}, cursive`;el.style.fontWeight=currentFontWeight();el.style.color=NAME_COLOR;el.style.textShadow=state.inkFinish==='glitter'?'0 0 .6px #f3dfaa, 0 0 1.4px rgba(215,180,106,.55)':'0 0 .25px #7b1f35'}
 function positionPreviewOverlay(viewport,pw,ph){

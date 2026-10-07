@@ -1,0 +1,13 @@
+WEDDING INVITATION STUDIO — FINAL VERCEL BUILD
+
+Deploy the contents of this folder as the Vercel project root.
+Framework Preset: Other
+Build Command: leave empty
+Output Directory: leave empty/default (project root)
+
+IMPORTANT:
+1. Redeploy this complete build; do not mix it with an older sharefix/sharefix_v22 folder.
+2. After deployment, open the Vercel URL and hard-refresh once with Ctrl+Shift+R.
+3. The app database is now IndexedDB version 4. It upgrades existing version 2/3 invitation records without deleting them.
+4. The service worker is v4 and uses network-first fetching so new Vercel JavaScript is not trapped behind the old cache.
+5. The original wedding card remains assets/card/wedding-invitation.pdf (3 pages).
