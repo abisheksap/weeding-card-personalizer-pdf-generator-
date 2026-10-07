@@ -3,14 +3,22 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
 
 const BASE_URL=new URL('./',window.location.href);
 const TEMPLATE_URL=new URL('assets/card/wedding-invitation.pdf',BASE_URL).href;
-const TEMPLATE_VERSION='wedding-card-v4-final-vercel';
+const TEMPLATE_VERSION='wedding-card-v5-stylus-colour';
 const NAME_FONT='Kalam';
 const NAME_COLOR='#7b1f35';
-const GLITTER_COLORS=['#d7b46a','#f3dfaa','#fff4cf','#b8864a'];
+const INK_STYLES={
+  burgundy:{label:'Burgundy Ruby',base:'#7b1f35',glitter:['#d7b46a','#f3dfaa','#fff4cf','#b8864a']},
+  gold:{label:'Champagne Gold',base:'#9a6a16',glitter:['#fff4cf','#f3dfaa','#d7b46a','#b8864a','#fffaf0']},
+  rose:{label:'Rose Pink',base:'#a83f68',glitter:['#ffd6e6','#f3b4c9','#fff0f5','#d7b46a']},
+  blue:{label:'Royal Sapphire',base:'#244d86',glitter:['#d9ecff','#b9d6ff','#fff4cf','#86a9d8']},
+  green:{label:'Emerald Green',base:'#28634d',glitter:['#d8f1df','#b9dfc8','#fff4cf','#8bb99e']},
+  plum:{label:'Deep Plum',base:'#63365f',glitter:['#f1d9ee','#e7b9df','#fff4cf','#c8a3c1']},
+  silver:{label:'Silver Pearl',base:'#59606b',glitter:['#ffffff','#e7edf5','#fff4cf','#b9c2cf']}
+};
 // Calibrated for the supplied 3-page card. Coordinates are in source-PDF points.
 const LAYOUT={name:{page:0,x:760,y:700,maxWidth:1550,fontSize:62},address:{page:0,x:945,y:525,maxWidth:1300,fontSize:54}};
 const $=s=>document.querySelector(s);
-const state={pdf:null,page:1,records:[],generated:null,fontStyle:'kalam',inkFinish:'glitter'};
+const state={pdf:null,page:1,records:[],generated:null,fontStyle:'kalam-bold',inkFinish:'glitter',inkColor:'burgundy'};
 let db;
 
 const navButtons=[...document.querySelectorAll('.nav-btn')];
@@ -57,7 +65,8 @@ async function renderPage(){
 }
 function currentFontWeight(){return state.fontStyle==='kalam-bold'?700:400}
 function closeCustomize(){const d=$('#customizeDetails');if(d)d.removeAttribute('open')}
-function stylePreviewText(el){el.style.fontFamily=`${NAME_FONT}, cursive`;el.style.fontWeight=currentFontWeight();el.style.color=NAME_COLOR;el.style.textShadow=state.inkFinish==='glitter'?'0 0 .6px #f3dfaa, 0 0 1.4px rgba(215,180,106,.55)':'0 0 .25px #7b1f35'}
+function currentInk(){return INK_STYLES[state.inkColor]||INK_STYLES.burgundy}
+function stylePreviewText(el){const ink=currentInk();el.style.fontFamily=`${NAME_FONT}, cursive`;el.style.fontWeight=currentFontWeight();el.style.color=ink.base;el.style.textShadow=state.inkFinish==='glitter'?`0 0 .8px ${ink.glitter[1]}, 0 0 1.8px ${ink.glitter[0]}, .25px .4px 0 rgba(255,255,255,.25)`:'0 0 .3px '+ink.base}
 function positionPreviewOverlay(viewport,pw,ph){
   const o=$('#previewOverlay'); if(state.page!==1 || !$('#guestName').value.trim()){o.style.display='none';return} o.style.display='block';o.style.width=viewport.width+'px';o.style.height=viewport.height+'px';o.style.left='50%';o.style.top='50%';o.style.transform='translate(-50%,-50%)';
   const n=$('#previewName'),a=$('#previewAddress');
@@ -77,16 +86,17 @@ async function renderTextPng(text,opts){
   for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width<=max||!line)line=test;else{lines.push(line);line=word}} if(line)lines.push(line);
   const lineH=opts.fontSize*scale*1.30; const width=Math.min(max,Math.max(...lines.map(x=>ctx.measureText(x).width),1))+pad*2; const height=lineH*lines.length+pad*2;
   c.width=Math.ceil(width);c.height=Math.ceil(height);ctx.font=`${weight} ${opts.fontSize*scale}px ${NAME_FONT}`;ctx.textBaseline='top';
-  ctx.fillStyle=NAME_COLOR;ctx.shadowColor='rgba(115,22,45,.16)';ctx.shadowBlur=0.9*scale;ctx.shadowOffsetY=.35*scale;
+  const ink=currentInk();
+  ctx.fillStyle=ink.base;ctx.shadowColor='rgba(40,20,25,.20)';ctx.shadowBlur=1.15*scale;ctx.shadowOffsetY=.45*scale;
   lines.forEach((l,i)=>ctx.fillText(l,pad,pad+i*lineH));
   ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
   if(state.inkFinish==='glitter'){
     const seed=[...text].reduce((a,ch)=>((a*31+ch.codePointAt(0))>>>0),2166136261);const rand=seededRandom(seed);
     ctx.globalCompositeOperation='source-atop';
-    const dots=Math.max(18,Math.floor((width/scale)*.11));
+    const dots=Math.max(28,Math.floor((width/scale)*.18));
     for(let i=0;i<dots;i++){
       const x=pad+rand()*(Math.max(1,width-pad*2)); const y=pad+rand()*(Math.max(1,height-pad*2));
-      const r=(.28+rand()*.8)*scale; ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=GLITTER_COLORS[i%GLITTER_COLORS.length];ctx.globalAlpha=.38+rand()*.42;ctx.fill();
+      const r=(.22+rand()*.72)*scale; ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=ink.glitter[i%ink.glitter.length];ctx.globalAlpha=.42+rand()*.48;ctx.fill();
     }
     ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
   }
@@ -109,6 +119,8 @@ async function refreshDuplicate(){const name=normalize($('#guestName').value),ad
 $('#guestName').addEventListener('input',()=>{showError('');refreshDuplicate();if(state.page===1&&state.pdf)renderPage()});$('#guestAddress').addEventListener('input',()=>{showError('');refreshDuplicate();if(state.page===1&&state.pdf)renderPage()});
 $('#fontStyle').addEventListener('change',e=>{state.fontStyle=e.target.value;closeCustomize();if(state.page===1&&state.pdf)renderPage()});
 $('#inkFinish').addEventListener('change',e=>{state.inkFinish=e.target.value;closeCustomize();if(state.page===1&&state.pdf)renderPage()});
+$('#inkColor').addEventListener('change',e=>{state.inkColor=e.target.value;closeCustomize();if(state.page===1&&state.pdf)renderPage()});
+closeCustomize();
 document.addEventListener('click',e=>{const d=$('#customizeDetails');if(d&&d.open&&!d.contains(e.target))d.removeAttribute('open');});
 
 $('#prevPage').onclick=()=>{if(state.page>1){state.page--;renderPage()}};$('#nextPage').onclick=()=>{if(state.pdf&&state.page<state.pdf.numPages){state.page++;renderPage()}};

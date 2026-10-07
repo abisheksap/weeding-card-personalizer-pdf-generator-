@@ -1,4 +1,4 @@
-const CACHE='wedding-studio-v4';
+const CACHE='wedding-studio-v5';
 const CORE=['./','./index.html','./css/styles.css','./js/app.js','./manifest.webmanifest','./assets/card/wedding-invitation.pdf','./assets/fonts/NotoSansDevanagari-Regular.ttf','./assets/fonts/NotoSansDevanagari-Bold.ttf','./assets/icons/icon.svg'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));

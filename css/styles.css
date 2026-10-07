@@ -7,9 +7,10 @@
 .customize-chevron{font-size:16px;line-height:1;transition:transform .18s ease}
 .customize-details[open] .customize-chevron{transform:rotate(180deg)}
 .customize-body{padding:0 14px 14px;border-top:1px solid #f0e5e7}
-.customize-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.customize-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .customize-grid label{margin:13px 0 0;font-size:11px}
 .customize-grid select{margin-top:7px;padding:10px 11px;font-size:11px}
 .customize-note{font-size:10px;line-height:1.5;color:var(--muted);margin:12px 0 0}
-.preview-overlay div{font-family:Kalam,cursive;font-weight:700;letter-spacing:.01em}
+.preview-overlay div{font-family:Kalam,cursive;font-weight:700;letter-spacing:.01em;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
+@media(max-width:760px){.customize-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.customize-grid{grid-template-columns:1fr}}
